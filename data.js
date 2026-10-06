@@ -97,13 +97,13 @@ var SCENES = [
 
 /* 지도 도식 — 실제 지도가 아니라 거점 위치만 단순화한 배치(설계 좌표 80x100) */
 var NODE_POS = {
-  pyeongyang:  { x: 23.6, y: 36.2, label: '평양성' },
-  hanseong:    { x: 33.1, y: 51.3, label: '한성' },
-  uiryeong:    { x: 42.2, y: 63.4, label: '의령', side: 'top' },
-  jinju:       { x: 36.1, y: 76.5, label: '진주성', side: 'left' },
-  dongnae:     { x: 51.2, y: 75.4, label: '동래성', side: 'right' },
-  hansando:    { x: 46.2, y: 88.5, label: '한산도' },
-  myeongnyang: { x: 24.1, y: 83.5, label: '명량·노량' }
+  pyeongyang:  { x: 23.2, y: 34.4, label: '평양성' },
+  hanseong:    { x: 32, y: 49.6, label: '한성', side: 'left' },
+  uiryeong:    { x: 48, y: 59.2, label: '의령', side: 'right' },
+  jinju:       { x: 33.6, y: 78.4, label: '진주성', side: 'top' },
+  dongnae:     { x: 54.4, y: 72, label: '동래성', side: 'right' },
+  hansando:    { x: 46.4, y: 90.4, label: '한산도', side: 'right' },
+  myeongnyang: { x: 22.4, y: 84.8, label: '명량·노량' }
 };
 
 /* 시기(차례) — 한 시기에 갈 수 있는 현장(scene id). 한 시기의 현장은 모두 거친 뒤 다음 시기로 간다.
