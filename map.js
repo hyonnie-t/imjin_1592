@@ -3,15 +3,19 @@
  * 지도는 거점 위치만 단순화한 도식이다(교과서 지도를 옮긴 것이 아님).
  * 거점 버튼·라벨은 canvas 위에 올린 HTML(overlay)이라 키보드·스크린리더·터치로 쓸 수 있다. */
 var MapView = (function () {
-  var GW = 76, GH = 96, DW = 80, DH = 100;
+  var GW = 100, GH = 125, DW = 80, DH = 100;
   function ux(x) { return x * GW / DW; }
   function uy(y) { return y * GH / DH; }
 
-  var POLY = [[18,8],[36,4],[50,8],[56,20],[50,32],[58,44],[68,52],[76,62],[78,74],[70,80],[56,82],[42,80],[32,84],[26,90],[16,88],[12,76],[18,62],[16,48],[22,36],[14,24]]
-    .map(function (p) { return [ux(p[0]), uy(p[1])]; });
-  var BLOBS = [ // 섬·이웃 땅 (한산도 섬, 일본, 명)
-    { x: 50, y: 88, r: 5 }, { x: 78, y: 96, r: 9 }, { x: 2, y: 2, r: 11 }
-  ].map(function (b) { return { x: ux(b.x), y: uy(b.y), r: b.r * GW / DW }; });
+  /* 위도·경도를 격자로 옮긴 단순화 윤곽 (한반도, 맞닿은 대륙, 제주, 일본 서쪽 끝) */
+  function gx(lon) { return 15 + (lon - 124.3) * 10.0; }
+  function gy(lat) { return (42.6 - lat) * 12.7; }
+  function geo(list) { return list.map(function (p) { return [gx(p[0]), gy(p[1])]; }); }
+  var POLY = geo([[124.3,39.9],[125.1,40.2],[125.8,40.8],[126.5,41.2],[127.4,41.5],[128.1,41.4],[129.0,41.8],[130.0,42.5],[130.6,42.4],[129.8,41.2],[129.3,40.6],[128.5,40.1],[127.6,39.7],[127.4,39.2],[128.2,38.6],[128.6,38.2],[129.1,37.5],[129.4,36.9],[129.45,36.0],[129.45,35.4],[129.2,35.1],[128.7,35.0],[128.0,34.75],[127.5,34.65],[126.9,34.4],[126.4,34.3],[126.3,34.75],[126.4,35.4],[126.55,35.95],[126.55,36.5],[126.2,36.8],[126.7,37.1],[126.6,37.5],[126.1,37.8],[125.6,37.7],[125.3,37.9],[124.9,38.1],[125.4,38.6],[125.2,39.0],[124.9,39.5],[124.6,39.7]]);
+  var MAIN = geo([[118,43.5],[131.5,43.5],[131.5,42.7],[130.6,42.4],[130.0,42.5],[129.0,41.8],[128.1,41.4],[127.4,41.5],[126.5,41.2],[125.8,40.8],[125.1,40.2],[124.3,39.9],[123.5,39.7],[122.5,39.6],[121.6,38.9],[121.1,39.0],[120.5,40.0],[118,40.0]]);
+  var BLOBS = [ // 제주, 일본(규슈 서쪽)
+    { x: gx(126.55), y: gy(33.4), r: 3.2 }, { x: gx(131.2), y: gy(33.3), r: 9 }
+  ];
 
   var PAL = { k: '#2b2118', w: '#efe3c6', r: '#8a3a2a', g: '#7a7f87', b: '#3b5d9c', y: '#e0b84a', n: '#8a5a2b', s: '#f0c9a0', e: '#c0392b', h: '#ffffff', m: '#9aa0a8', K: '#1c1c1c', o: '#c9a46a', p: '#e58aa0', c: '#2f8f7a', u: '#3b5d9c' };
   var SPR = {
@@ -22,7 +26,7 @@ var MapView = (function () {
     fog:    ['..kkkkkkkk..', '.kmmmmmmmmk.', 'kmmmkkkkmmmk', 'kmmkmmmmkmmk', 'kmmmmmmkmmmk', 'kmmmmmkmmmmk', 'kmmmmkmmmmmk', 'kmmmmmmmmmmk', 'kmmmmkmmmmmk', '.kmmmmmmmmk.', '..kkkkkkkk..']
   };
   var ICON = { dongnae: 'castle', uiryeong: 'tent', hanseong: 'palace', hansando: 'ship', jinju: 'castle', pyeongyang: 'castle', myeongnyang: 'ship' };
-  var CAMP = { x: 26, y: 54 };
+  var CAMP = { x: 53, y: 74 };
 
   function inPoly(x, y, poly) {
     var c = false;
@@ -32,14 +36,16 @@ var MapView = (function () {
     }
     return c;
   }
-  function isLand(x, y) {
-    if (inPoly(x + .5, y + .5, POLY)) return true;
+  function landKind(x, y) { // 0 바다, 1 한반도·섬, 2 대륙
+    if (inPoly(x + .5, y + .5, POLY)) return 1;
+    if (inPoly(x + .5, y + .5, MAIN)) return 2;
     for (var i = 0; i < BLOBS.length; i++) {
       var dx = x + .5 - BLOBS[i].x, dy = y + .5 - BLOBS[i].y;
-      if (dx * dx + dy * dy <= BLOBS[i].r * BLOBS[i].r) return true;
+      if (dx * dx + dy * dy <= BLOBS[i].r * BLOBS[i].r) return 1;
     }
-    return false;
+    return 0;
   }
+  function isLand(x, y) { return landKind(x, y) > 0; }
   function hash(x, y) { var h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967295; }
 
   /* 바탕(바다·땅)은 한 번만 그려 둔다 */
@@ -48,10 +54,10 @@ var MapView = (function () {
     baseCv = document.createElement('canvas'); baseCv.width = GW; baseCv.height = GH;
     var c = baseCv.getContext('2d'), x, y;
     for (y = 0; y < GH; y++) for (x = 0; x < GW; x++) {
-      var land = isLand(x, y), r = hash(x, y);
+      var kind = landKind(x, y), land = kind > 0, r = hash(x, y);
       if (land) {
         var shore = !isLand(x - 1, y) || !isLand(x + 1, y) || !isLand(x, y - 1) || !isLand(x, y + 1);
-        c.fillStyle = shore ? '#b9a66d' : (r > .93 ? '#6f9a52' : r > .8 ? '#86b062' : '#93bd6b');
+        c.fillStyle = shore ? '#b9a66d' : (kind === 2 ? (r > .93 ? '#97a15a' : r > .8 ? '#a8b366' : '#b3bd70') : (r > .93 ? '#6f9a52' : r > .8 ? '#86b062' : '#93bd6b'));
       } else {
         var near = isLand(x - 2, y) || isLand(x + 2, y) || isLand(x, y - 2) || isLand(x, y + 2);
         c.fillStyle = near ? '#4f8fb8' : (r > .9 ? '#3d7aa6' : '#4685b0');
@@ -132,9 +138,9 @@ var MapView = (function () {
       ov.innerHTML = '';
       Object.keys(NODE_POS).forEach(function (k) {
         var b = document.createElement('button');
-        b.type = 'button'; b.className = 'node'; b.setAttribute('data-node', k);
+        b.type = 'button'; b.className = 'node'; b.setAttribute('data-node', k); b.setAttribute('data-side', NODE_POS[k].side || 'bottom');
         b.style.left = (NODE_POS[k].x / DW * 100) + '%'; b.style.top = (NODE_POS[k].y / DH * 100) + '%';
-        var lb = document.createElement('span'); lb.className = 'nlabel'; lb.textContent = NODE_POS[k].label;
+        var lb = document.createElement('span'); lb.className = 'nlabel ' + (NODE_POS[k].side || 'bottom'); lb.textContent = NODE_POS[k].label;
         var bd = document.createElement('span'); bd.className = 'nbadge'; bd.hidden = true;
         b.appendChild(lb); b.appendChild(bd);
         b.addEventListener('click', function () { if (cfg.onNode && nodeState[k] !== 'locked') cfg.onNode(k, nodeState[k]); });
@@ -150,7 +156,7 @@ var MapView = (function () {
     function refreshButtons() {
       Object.keys(btn).forEach(function (k) {
         var st = nodeState[k] || 'locked', b = btn[k], lb = b.querySelector('.nlabel'), bd = b.querySelector('.nbadge');
-        b.className = 'node ' + st;
+        b.className = 'node ' + st; b.setAttribute('data-side', NODE_POS[k].side || 'bottom');
         var name = NODE_POS[k].label;
         if (st === 'locked') { lb.textContent = '?'; b.setAttribute('aria-label', '아직 갈 수 없는 곳'); b.setAttribute('aria-disabled', 'true'); b.tabIndex = -1; }
         else {
