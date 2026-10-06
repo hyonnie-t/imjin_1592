@@ -88,6 +88,19 @@ var MapView = (function () {
     return (heroCache[ck] = cv);
   }
 
+  /* Gemini 도트 PNG(img/avatar_<key>.png 정면, _walk.png 옆모습). 없으면 위의 코드 도트를 쓴다. */
+  var imgCache = {};
+  function heroImg(key, walk, onLoad) {
+    var src = 'img/avatar_' + key + (walk ? '_walk' : '') + '.png';
+    var im = imgCache[src];
+    if (!im) {
+      im = imgCache[src] = new Image();
+      im.onload = function () { if (onLoad) onLoad(); };
+      im.src = src;
+    }
+    return (im.complete && im.naturalWidth > 0) ? im : null;
+  }
+
   var sprCache = {};
   function spriteCanvas(name) {
     if (sprCache[name]) return sprCache[name];
@@ -110,7 +123,7 @@ var MapView = (function () {
     var lc = lo.getContext('2d'), dc = cv.getContext('2d');
     var scale = 4, frame = 0, timer = null;
     var nodeState = {}, badges = {}, route = [], btn = {};
-    var tok = { x: ux(CAMP.x), y: uy(CAMP.y), moving: false }, avatarKey = 'seonbi';
+    var tok = { x: ux(CAMP.x), y: uy(CAMP.y), moving: false, dir: 1 }, avatarKey = 'seonbi';
     var mv = {};
 
     function pos(k) { var p = NODE_POS[k]; return { x: ux(p.x), y: uy(p.y) }; }
@@ -175,14 +188,26 @@ var MapView = (function () {
         lc.drawImage(spr, x, y);
         if (st === 'done') { lc.fillStyle = '#c0392b'; lc.fillRect(x + spr.width - 2, y - 5, 1, 6); lc.fillRect(x + spr.width - 1, y - 5, 3, 2); }
       });
-      // 말
-      if (cfg.token !== false) {
+      // 말 (PNG가 준비되면 아래 화면 해상도 단계에서 그린다)
+      var pngHero = (cfg.token !== false) ? heroImg(avatarKey, tok.moving, draw) : null;
+      if (cfg.token !== false && !pngHero) {
         var hero = heroCanvas(avatarKey, tok.moving && (frame % 2) ? 1 : 0);
         var hx = (tok.x + 9 + hero.width / 2 > GW) ? tok.x - 9 - hero.width / 2 : tok.x + 9 - hero.width / 2;
         lc.drawImage(hero, Math.round(hx), Math.round(tok.y - hero.height + 9));
       }
       dc.imageSmoothingEnabled = false;
       dc.drawImage(lo, 0, 0, cv.width, cv.height);
+      if (pngHero) {
+        var k = scale / 4, sw = pngHero.naturalWidth * k, sh = pngHero.naturalHeight * k;
+        var px = tok.x * scale, py = tok.y * scale;
+        var x = px + 9 * scale - sw / 2;
+        if (x + sw > cv.width) x = px - 9 * scale - sw / 2;
+        var y = py + 9 * scale - sh - (tok.moving && (frame % 2) ? scale : 0);
+        dc.imageSmoothingEnabled = (scale % 4 !== 0);
+        if (tok.moving && tok.dir < 0) { dc.save(); dc.translate(Math.round(x + sw), Math.round(y)); dc.scale(-1, 1); dc.drawImage(pngHero, 0, 0, sw, sh); dc.restore(); }
+        else dc.drawImage(pngHero, Math.round(x), Math.round(y), sw, sh);
+        dc.imageSmoothingEnabled = false;
+      }
     }
 
     function loop() { frame++; draw(); }
@@ -204,7 +229,7 @@ var MapView = (function () {
     mv.moveToken = function (k, cb) {
       var to = pos(k), from = { x: tok.x, y: tok.y };
       if (reduced) { tok.x = to.x; tok.y = to.y; draw(); cb(); return; }
-      tok.moving = true;
+      tok.moving = true; tok.dir = to.x >= from.x ? 1 : -1;
       var t0 = Date.now(), dur = 900;
       (function step() {
         var t = Math.min(1, (Date.now() - t0) / dur), e = t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;

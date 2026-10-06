@@ -57,12 +57,17 @@ function openAvatar() {
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'avatar'; b.setAttribute('role', 'radio'); b.setAttribute('data-key', a.key);
     b.setAttribute('aria-checked', a.key === S.avatar ? 'true' : 'false');
-    var src = MapView.heroCanvas(a.key, 0), cv = document.createElement('canvas');
-    cv.width = src.width * 8; cv.height = src.height * 8;
-    var c = cv.getContext('2d'); c.imageSmoothingEnabled = false; c.drawImage(src, 0, 0, cv.width, cv.height);
+    var pic = document.createElement('img');
+    pic.src = 'img/avatar_' + a.key + '.png'; pic.alt = ''; pic.className = 'avatar-pic';
+    pic.onerror = function () { // 이미지가 없으면 코드로 찍은 도트로 대신한다
+      var src = MapView.heroCanvas(a.key, 0), cv = document.createElement('canvas');
+      cv.width = src.width * 8; cv.height = src.height * 8; cv.className = 'avatar-pic';
+      var c = cv.getContext('2d'); c.imageSmoothingEnabled = false; c.drawImage(src, 0, 0, cv.width, cv.height);
+      if (pic.parentNode) pic.parentNode.replaceChild(cv, pic);
+    };
     var nm = document.createElement('b'); nm.textContent = a.name;
     var ds = document.createElement('small'); ds.textContent = a.desc;
-    b.appendChild(cv); b.appendChild(nm); b.appendChild(ds);
+    b.appendChild(pic); b.appendChild(nm); b.appendChild(ds);
     b.addEventListener('click', function () {
       S.avatar = a.key;
       Array.prototype.forEach.call(box.children, function (x) { x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
