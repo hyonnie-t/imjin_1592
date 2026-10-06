@@ -40,41 +40,39 @@ var MapView = (function () {
   function sprites() {
     var S = {}, q;
     // 성(성곽과 문루)
-    q = grid(16, 15);
-    q.R(0, 5, 16, 9, 'w'); q.R(11, 5, 5, 9, 'W'); q.R(0, 12, 16, 2, 'W');
-    for (var i = 0; i < 16; i += 2) q.P(i, 4, 'w');
-    q.R(5, 8, 1, 1, 'W'); q.R(9, 10, 1, 1, 'W'); q.R(2, 9, 2, 1, 'W'); q.R(12, 8, 2, 1, 'G'); q.R(1, 7, 1, 1, 'W');
-    q.R(2, 1, 12, 1, 'B'); q.R(3, 0, 10, 1, 'b'); q.R(1, 2, 14, 1, 'B'); q.R(2, 3, 12, 1, 'b');
-    q.R(4, 4, 8, 1, 'e'); q.R(4, 4, 1, 1, 'N'); q.R(11, 4, 1, 1, 'N');
-    q.R(6, 8, 4, 6, 'N'); q.R(7, 7, 2, 1, 'N'); q.R(7, 9, 1, 5, 'n');
+    q = grid(12, 11);
+    q.R(0, 4, 12, 7, 'w'); q.R(8, 4, 4, 7, 'W'); q.R(0, 9, 12, 2, 'W');
+    [0, 2, 9, 11].forEach(function (i) { q.P(i, 3, 'w'); });
+    q.P(1, 6, 'W'); q.P(2, 8, 'W'); q.P(9, 7, 'G'); q.P(10, 5, 'G');
+    q.R(3, 0, 6, 1, 'b'); q.R(1, 1, 10, 1, 'B'); q.R(2, 2, 8, 1, 'b'); q.R(3, 3, 6, 1, 'e');
+    q.R(4, 6, 4, 5, 'N'); q.R(5, 5, 2, 1, 'N'); q.R(5, 7, 1, 4, 'n');
     S.castle = q.rows();
-    // 궁궐(한성)
-    q = grid(16, 15);
-    q.R(7, 0, 2, 1, 'y'); q.R(6, 1, 4, 1, 'B'); q.R(4, 2, 8, 2, 'b'); q.R(3, 4, 10, 1, 'B');
-    q.R(3, 5, 10, 3, 'e'); q.R(3, 5, 1, 3, 'N'); q.R(12, 5, 1, 3, 'N'); q.R(7, 5, 2, 3, 'N'); q.R(5, 6, 1, 1, 'w'); q.R(10, 6, 1, 1, 'w');
-    q.R(0, 8, 16, 2, 'b'); q.R(0, 7, 1, 1, 'b'); q.R(15, 7, 1, 1, 'b'); q.R(0, 10, 16, 1, 'B');
-    q.R(2, 11, 12, 3, 'e'); q.R(2, 11, 1, 3, 'N'); q.R(13, 11, 1, 3, 'N'); q.R(7, 11, 2, 3, 'N'); q.R(4, 12, 1, 1, 'w'); q.R(11, 12, 1, 1, 'w');
-    q.R(1, 14, 14, 1, 'g');
+    // 궁궐(한성) — 경복궁 그림이 img/node_hanseong.png로 오면 그것을 쓴다
+    q = grid(12, 12);
+    q.R(5, 0, 2, 1, 'y'); q.R(4, 1, 4, 1, 'B'); q.R(3, 2, 6, 1, 'b'); q.R(2, 3, 8, 1, 'B');
+    q.R(3, 4, 6, 2, 'e'); q.R(3, 4, 1, 2, 'N'); q.R(8, 4, 1, 2, 'N'); q.R(5, 4, 2, 2, 'N');
+    q.R(0, 6, 12, 2, 'b'); q.P(0, 5, 'b'); q.P(11, 5, 'b'); q.R(0, 8, 12, 1, 'B');
+    q.R(2, 9, 8, 2, 'e'); q.R(2, 9, 1, 2, 'N'); q.R(9, 9, 1, 2, 'N'); q.R(5, 9, 2, 2, 'N');
+    q.R(1, 11, 10, 1, 'g');
     S.palace = q.rows();
     // 진영(천막과 깃발)
-    q = grid(16, 15);
-    for (var r = 0; r < 10; r++) { var half = 1 + Math.floor(r * 0.75); q.R(7 - half, 4 + r, half * 2 + 1, 1, 'x'); q.R(7, 4 + r, half + 1, 1, 'X'); }
-    q.R(6, 10, 3, 4, 'N'); q.R(7, 11, 1, 3, 'k');
-    q.R(14, 0, 1, 14, 'n'); q.R(10, 1, 4, 3, 'e'); q.R(10, 3, 1, 1, 'R'); q.P(11, 2, 'h');
-    q.R(1, 7, 1, 7, 'g'); q.P(1, 6, 'h'); q.R(3, 9, 1, 5, 'g'); q.P(3, 8, 'h');
+    q = grid(12, 11);
+    for (var r = 0; r < 8; r++) { var half = 1 + Math.floor(r * 0.7); q.R(5 - half, 3 + r, half * 2 + 1, 1, 'x'); q.R(5, 3 + r, half + 1, 1, 'X'); }
+    q.R(4, 8, 3, 3, 'N'); q.R(5, 9, 1, 2, 'k');
+    q.R(11, 0, 1, 10, 'n'); q.R(8, 0, 3, 3, 'e'); q.P(8, 2, 'R'); q.P(9, 1, 'h');
     S.tent = q.rows();
     // 배(판옥선)
-    q = grid(16, 15);
-    q.R(8, 0, 1, 8, 'N'); q.R(9, 1, 5, 5, 'h'); q.R(9, 5, 5, 1, 'W'); q.R(9, 3, 5, 1, 'e'); q.R(12, 1, 2, 5, 'f'); q.R(9, 0, 3, 1, 'e');
-    q.R(4, 7, 8, 3, 'N'); q.R(3, 6, 10, 1, 'B'); q.R(5, 8, 1, 1, 'y'); q.R(8, 8, 1, 1, 'y'); q.R(10, 8, 1, 1, 'y');
-    q.R(0, 10, 16, 2, 'n'); q.R(1, 12, 14, 1, 'N'); q.R(3, 13, 10, 1, 'N'); q.R(0, 10, 16, 1, 'o'); q.R(14, 9, 2, 1, 'n');
-    q.R(1, 14, 3, 1, 'h'); q.R(11, 14, 4, 1, 'h');
+    q = grid(12, 11);
+    q.R(6, 0, 1, 6, 'N'); q.R(7, 1, 4, 3, 'h'); q.R(7, 3, 4, 1, 'e'); q.R(7, 0, 2, 1, 'e');
+    q.R(3, 5, 6, 2, 'N'); q.R(2, 4, 8, 1, 'B'); q.P(4, 5, 'y'); q.P(7, 5, 'y');
+    q.R(0, 7, 12, 2, 'n'); q.R(1, 9, 10, 1, 'N'); q.R(0, 7, 12, 1, 'o');
+    q.R(0, 10, 3, 1, 'h'); q.R(8, 10, 4, 1, 'h');
     S.ship = q.rows();
     // 안개
-    q = grid(16, 14);
-    q.C(5, 8, 4, 'f'); q.C(10, 6, 5, 'f'); q.C(12, 9, 3.5, 'f'); q.C(7, 10, 3.5, 'f'); q.R(3, 10, 11, 3, 'f');
-    q.R(2, 11, 13, 2, 'F'); q.R(4, 12, 9, 1, 'F');
-    q.R(6, 3, 5, 1, 'y'); q.R(10, 4, 1, 3, 'y'); q.R(8, 6, 2, 1, 'y'); q.R(7, 7, 1, 2, 'y'); q.R(7, 10, 1, 1, 'y'); q.R(6, 3, 1, 2, 'y');
+    q = grid(12, 10);
+    q.C(4, 5, 3, 'f'); q.C(8, 4, 3.5, 'f'); q.C(9, 6, 2.5, 'f'); q.C(5, 7, 2.5, 'f'); q.R(2, 6, 9, 2, 'f');
+    q.R(1, 7, 11, 2, 'F'); q.R(3, 8, 7, 1, 'F');
+    q.R(5, 1, 3, 1, 'y'); q.P(7, 2, 'y'); q.P(6, 3, 'y'); q.P(6, 5, 'y');
     S.fog = q.rows();
     // 화살표(열린 곳 표시)
     S.arrow = ['yyyyyyy', '.yyyyy.', '..yyy..', '...y...'];
@@ -120,6 +118,19 @@ var MapView = (function () {
   }
   var BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
   function bayer(x, y) { return BAYER[(y & 3) * 4 + (x & 3)] / 16 - .5; }
+
+  /* 손으로 찍은 거점 그림: img/node_<key>.png (투명 배경). 있으면 코드 그림 대신 쓴다. 너비는 NODE_PNG_W 격자 칸에 맞춘다 */
+  var NODE_PNG_W = 14, nodeImgCache = {};
+  function nodeImg(key, onLoad) {
+    var src = 'img/node_' + key + '.png', im = nodeImgCache[src];
+    if (im === undefined) {
+      im = nodeImgCache[src] = new Image();
+      im.onload = function () { im.__ok = true; if (onLoad) onLoad(); };
+      im.onerror = function () { im.__bad = true; };
+      im.src = src;
+    }
+    return (im && im.__ok && im.naturalWidth > 0) ? im : null;
+  }
 
   var sprCache = {};
   function spriteCanvas(name, outline, ocol) {
@@ -351,9 +362,12 @@ var MapView = (function () {
         for (var t = 0; t <= d; t += 3) { lc.fillRect(Math.round(a.x + (b.x - a.x) * t / d), Math.round(a.y + (b.y - a.y) * t / d), 2, 2); }
       }
       // 거점 (그림자 → 그림 → 표시)
+      var pngNodes = [];
       Object.keys(NODE_POS).forEach(function (k) {
         var st = nodeState[k] || 'locked', q = pos(k);
         var spr = (st === 'locked') ? spriteCanvas('fog', true, '#8d97a8') : spriteCanvas(ICON[k], true);
+        var png = (st === 'locked') ? null : nodeImg(k, draw);
+        if (png) spr = { width: NODE_PNG_W, height: Math.max(8, Math.round(NODE_PNG_W * png.naturalHeight / png.naturalWidth)) };
         var bob = (st === 'locked') ? Math.round(Math.sin(frame / 6 + q.x) * 1) : 0;
         var x = Math.round(q.x - spr.width / 2), y = Math.round(q.y - spr.height / 2) + bob;
         if (st !== 'locked' && ICON[k] !== 'ship') { // 땅 위 그림자
@@ -364,7 +378,7 @@ var MapView = (function () {
           lc.fillRect(x - 2, y - 2, spr.width + 4, 1); lc.fillRect(x - 2, y + spr.height + 1, spr.width + 4, 1);
           lc.fillRect(x - 2, y - 2, 1, spr.height + 4); lc.fillRect(x + spr.width + 1, y - 2, 1, spr.height + 4);
         }
-        lc.drawImage(spr, x, y);
+        if (png) pngNodes.push([png, x, y, spr.width, spr.height]); else lc.drawImage(spr, x, y);
         if (st === 'open') {
           var ar = spriteCanvas('arrow', true), ay = y - ar.height - 2 - (((frame >> 1) % 4 < 2) ? 0 : 2);
           lc.drawImage(ar, Math.round(q.x - ar.width / 2), ay);
@@ -378,16 +392,22 @@ var MapView = (function () {
       var pngHero = (cfg.token !== false) ? heroImg(avatarKey, tok.moving, draw) : null;
       if (cfg.token !== false && !pngHero) {
         var hero = heroCanvas(avatarKey, tok.moving && (frame % 2) ? 1 : 0);
-        var hx = (tok.x + 11 + hero.width / 2 > GW) ? tok.x - 11 - hero.width / 2 : tok.x + 11 - hero.width / 2;
+        var hx = (tok.x + 9 + hero.width / 2 > GW) ? tok.x - 9 - hero.width / 2 : tok.x + 9 - hero.width / 2;
         lc.drawImage(hero, Math.round(hx), Math.round(tok.y - hero.height + 9));
       }
       dc.imageSmoothingEnabled = false;
       dc.drawImage(lo, 0, 0, cv.width, cv.height);
+      pngNodes.forEach(function (n) { // 손으로 찍은 거점 그림
+        var tw = n[3] * scale, th = n[4] * scale;
+        dc.imageSmoothingEnabled = n[0].naturalWidth > tw;
+        dc.drawImage(n[0], Math.round(n[1] * scale), Math.round(n[2] * scale), tw, th);
+        dc.imageSmoothingEnabled = false;
+      });
       if (pngHero) {
         var k = scale / 4, sw = pngHero.naturalWidth * k, sh = pngHero.naturalHeight * k;
         var px = tok.x * scale, py = tok.y * scale;
-        var x = px + 11 * scale - sw / 2;
-        if (x + sw > cv.width) x = px - 11 * scale - sw / 2;
+        var x = px + 9 * scale - sw / 2;
+        if (x + sw > cv.width) x = px - 9 * scale - sw / 2;
         var y = py + 9 * scale - sh - (tok.moving && (frame % 2) ? scale : 0);
         dc.imageSmoothingEnabled = (scale % 4 !== 0);
         if (tok.moving && tok.dir < 0) { dc.save(); dc.translate(Math.round(x + sw), Math.round(y)); dc.scale(-1, 1); dc.drawImage(pngHero, 0, 0, sw, sh); dc.restore(); }
