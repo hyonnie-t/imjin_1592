@@ -14,7 +14,7 @@ var CONFIG = {
 };
 
 var LETTERS = ['A', 'B', 'C'];
-var S = { sid: '', name: '', preview: false, scene: 0, picks: [], stats: null, submitted: false, guardOn: false };
+var S = { sid: '', name: '', preview: false, turn: 0, cur: -1, phase: 'turn', order: [], dice: [], picks: [], stats: null, submitted: false, guardOn: false };
 
 function $(id) { return document.getElementById(id); }
 function show(id) {
@@ -71,84 +71,153 @@ function renderBg() {
   });
 }
 
-/* ── 지도 도식 ── */
-function drawMap(curNode) {
-  var NS = 'http://www.w3.org/2000/svg';
-  var svg = $('mapSvg');
-  svg.innerHTML = '';
-  var land = document.createElementNS(NS, 'path');
-  land.setAttribute('class', 'land');
-  land.setAttribute('d', 'M30 4 L58 6 L64 20 L58 34 L72 48 L90 62 L90 82 L72 94 L44 98 L22 96 L16 80 L24 62 L22 44 L28 28 Z');
-  svg.appendChild(land);
-  Object.keys(MAP_NODES).forEach(function (k) {
-    var n = MAP_NODES[k], cur = (k === curNode);
-    var c = document.createElementNS(NS, 'circle');
-    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', cur ? 3.6 : 2.2);
-    c.setAttribute('class', 'dot' + (cur ? ' cur' : ''));
-    svg.appendChild(c);
-    var t = document.createElementNS(NS, 'text');
-    t.setAttribute('x', n.x); t.setAttribute('y', n.y + (cur ? 8 : 6.5));
-    t.setAttribute('class', cur ? 'cur' : '');
-    t.textContent = n.label;
-    svg.appendChild(t);
-  });
-  svg.setAttribute('aria-label', '현재 장면의 거점: ' + MAP_NODES[curNode].label);
-}
+/* ── 보드 (시기 → 현장 → 선택 → 주사위 → 실제 역사) ── */
+var MV = null, MVEND = null;
+function sceneByNode(node) { for (var i = 0; i < SCENES.length; i++) if (SCENES[i].node === node) return i; return -1; }
+function nodeOfScene(i) { return SCENES[i].node; }
+function panel(id) { ['pTurn', 'pScene', 'pDice', 'after'].forEach(function (p) { $(p).hidden = (p !== id); }); }
+function visitedNodes() { return S.order.map(nodeOfScene); }
 
-/* ── 시뮬레이션 ── */
+function nodeStates() {
+  var m = {};
+  Object.keys(NODE_POS).forEach(function (k) { m[k] = 'locked'; });
+  S.order.forEach(function (i) { m[nodeOfScene(i)] = 'done'; });
+  if (S.phase === 'turn') TURNS[S.turn].fronts.forEach(function (id) {
+    var i = id - 1; if (S.picks[i] === undefined) m[nodeOfScene(i)] = 'open';
+  });
+  return m;
+}
+function refreshMap() { MV.setNodes(nodeStates()); MV.setRoute(visitedNodes()); }
+
 function startSim() {
-  S.scene = 0; S.picks = []; S.stats = { s: CONFIG.START, m: CONFIG.START, g: CONFIG.START };
+  S.turn = 0; S.picks = []; S.order = []; S.dice = []; S.phase = 'turn'; S.cur = -1;
+  S.stats = { s: CONFIG.START, m: CONFIG.START, g: CONFIG.START };
   if (!S.guardOn) { FocusGuard.start({ key: CONFIG.GAME_NAME + ':' + S.sid }); S.guardOn = true; }
   renderStats();
   show('vSim');
-  renderScene();
+  if (!MV) MV = MapView.create({ canvas: $('mapCv'), overlay: $('mapOv'), onNode: onNode });
+  MV.resize(); MV.placeToken(null);
+  renderTurn();
 }
-function renderScene() {
-  var sc = SCENES[S.scene];
-  $('simProg').textContent = '장면 ' + (S.scene + 1) + ' / ' + SCENES.length;
-  $('simDate').textContent = sc.date;
-  $('simArea').textContent = sc.area;
-  $('simPlace').textContent = sc.place;
-  $('simSit').textContent = sc.situation;
-  var note = $('simNote');
-  note.hidden = !sc.note; note.textContent = sc.note || '';
-  drawMap(sc.node);
-  var box = $('choices');
-  box.innerHTML = '';
-  sc.choices.forEach(function (c, i) {
+function renderTurn() {
+  S.phase = 'turn';
+  var t = TURNS[S.turn], first = SCENES[t.fronts[0] - 1];
+  $('simProg').textContent = '시기 ' + (S.turn + 1) + ' / ' + TURNS.length;
+  $('simDate').textContent = t.label || first.date;
+  $('turnTitle').textContent = '이번 시기에 갈 수 있는 현장';
+  $('turnNote').textContent = t.note || '지도에서 깜박이는 곳을 누르거나 아래 버튼을 눌러 봐.';
+  $('moveMsg').textContent = '';
+  var box = $('frontBtns'); box.innerHTML = '';
+  t.fronts.forEach(function (id) {
+    var i = id - 1, sc = SCENES[i];
     var b = document.createElement('button');
-    b.type = 'button'; b.className = 'choice';
-    var lt = document.createElement('span'); lt.className = 'lt'; lt.textContent = LETTERS[i] + '.';
-    b.appendChild(lt); b.appendChild(document.createTextNode(c.t));
-    b.addEventListener('click', function () { pick(i); });
+    b.type = 'button'; b.className = 'choice front';
+    b.disabled = S.picks[i] !== undefined;
+    b.appendChild(document.createTextNode(sc.place + ' '));
+    var sm = document.createElement('small'); sm.textContent = sc.area + ' · ' + sc.date; b.appendChild(sm);
+    b.addEventListener('click', function () { goFront(i); });
     box.appendChild(b);
   });
-  $('after').hidden = true;
-  $('btnNext').textContent = (S.scene === SCENES.length - 1) ? '결과 보기' : '다음 장면으로';
+  panel('pTurn'); refreshMap();
 }
-function pick(i) {
-  if (S.picks[S.scene] !== undefined) return;
-  var sc = SCENES[S.scene], c = sc.choices[i];
-  S.picks[S.scene] = i;
-  S.stats[c.up] = clamp(S.stats[c.up] + 1);
-  S.stats[c.down] = clamp(S.stats[c.down] - 1);
-  renderStats();
-  Array.prototype.forEach.call($('choices').children, function (b, k) {
-    b.disabled = true;
-    b.className = 'choice ' + (k === i ? 'picked' : 'dim');
+function onNode(node, state) {
+  if (S.phase === 'moving' || S.phase === 'dice') return;
+  var i = sceneByNode(node);
+  if (state === 'open' && S.phase === 'turn') goFront(i);
+  else if (state === 'done' && (S.phase === 'turn' || S.phase === 'review')) showReview(i);
+}
+function goFront(i) {
+  if (S.phase !== 'turn' || S.picks[i] !== undefined) return;
+  S.phase = 'moving'; S.cur = i;
+  $('moveMsg').textContent = '이동 중…';
+  Array.prototype.forEach.call($('frontBtns').children, function (b) { b.disabled = true; });
+  MV.moveToken(nodeOfScene(i), function () { openScene(i); });
+}
+function openScene(i) {
+  var sc = SCENES[i]; S.phase = 'scene'; S.cur = i;
+  $('simDate').textContent = sc.date;
+  $('simArea').textContent = sc.area; $('simPlace').textContent = sc.place;
+  $('simSit').textContent = sc.situation;
+  var note = $('simNote'); note.hidden = !sc.note; note.textContent = sc.note || '';
+  var box = $('choices'); box.innerHTML = '';
+  sc.choices.forEach(function (c, k) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'choice';
+    var lt = document.createElement('span'); lt.className = 'lt'; lt.textContent = LETTERS[k] + '.';
+    b.appendChild(lt); b.appendChild(document.createTextNode(c.t));
+    b.addEventListener('click', function () { pick(k); });
+    box.appendChild(b);
   });
+  panel('pScene'); refreshMap();
+  $('pScene').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function diceFace(n) {
+  var map = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+  var f = $('diceFace'); f.innerHTML = '';
+  for (var c = 0; c < 9; c++) { var d = document.createElement('i'); if (!n || map[n].indexOf(c) === -1) d.style.visibility = 'hidden'; f.appendChild(d); }
+}
+function pick(k) {
+  if (S.phase !== 'scene') return;
+  S.phase = 'dice'; S.pendingPick = k;
+  Array.prototype.forEach.call($('choices').children, function (b, j) { b.disabled = true; b.className = 'choice ' + (j === k ? 'picked' : 'dim'); });
+  diceFace(0); $('diceMsg').textContent = '';
+  $('btnRoll').hidden = false; $('btnRoll').disabled = false; $('btnAfterDice').hidden = true;
+  panel('pDice');
+  $('pDice').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function rollDice() {
+  var btn = $('btnRoll'); btn.disabled = true;
+  var box = $('dice'), n = 0, ticks = 0, total = reducedMotion() ? 1 : 10;
+  box.classList.add('rolling');
+  (function tick() {
+    n = 1 + Math.floor(Math.random() * 6); diceFace(n); ticks++;
+    if (ticks < total) { setTimeout(tick, 80); return; }
+    box.classList.remove('rolling');
+    applyDice(n);
+  })();
+}
+function reducedMotion() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
+function applyDice(n) {
+  var i = S.cur, k = S.pendingPick, c = SCENES[i].choices[k], e = diceEffect(n);
+  var before = { s: S.stats.s, m: S.stats.m, g: S.stats.g };
+  S.stats[c.up] = clamp(S.stats[c.up] + e.up);
+  S.stats[c.down] = clamp(S.stats[c.down] - e.down);
+  renderStats();
+  S.picks[i] = k; S.order.push(i);
+  S.dice[i] = { n: n, up: c.up, down: c.down, gain: S.stats[c.up] - before[c.up], loss: before[c.down] - S.stats[c.down] };
+  $('diceMsg').textContent = '주사위 ' + n + ' — ' + RES_LABEL[c.up] + ' +' + e.up + ', ' + RES_LABEL[c.down] + ' −' + e.down;
+  $('btnRoll').hidden = true; $('btnAfterDice').hidden = false;
+  S.phase = 'afterDice';
+}
+function fillFeedback(i) {
+  var sc = SCENES[i];
+  $('fbPick').textContent = '내 선택 — ' + LETTERS[S.picks[i]] + '. ' + sc.choices[S.picks[i]].t;
   $('fbReal').textContent = sc.history;
-  var bk = $('fbBook');
-  bk.hidden = !sc.book;
+  var bk = $('fbBook'); bk.hidden = !sc.book;
   if (sc.book) bk.textContent = '교과서 ' + sc.book.page + '쪽 ' + sc.book.note + ': ' + sc.book.quote;
   $('fbOther').textContent = sc.concurrent;
-  var ex = $('fbExtra');
-  ex.hidden = !sc.extra; ex.textContent = sc.extra || '';
-  $('after').hidden = false;
+  var ex = $('fbExtra'); ex.hidden = !sc.extra; ex.textContent = sc.extra || '';
+}
+function showFeedback() {
+  var i = S.cur; S.phase = 'feedback';
+  fillFeedback(i);
+  var left = TURNS[S.turn].fronts.filter(function (id) { return S.picks[id - 1] === undefined; }).length;
+  var last = (S.turn === TURNS.length - 1);
+  $('btnNext').textContent = left ? '이번 시기의 다른 현장으로' : (last ? '결과 보기' : '다음 시기로');
+  panel('after'); refreshMap();
   $('after').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
-function nextScene() {
-  if (S.scene < SCENES.length - 1) { S.scene++; renderScene(); window.scrollTo(0, 0); }
+function showReview(i) {
+  S.phase = 'review'; S.reviewFrom = S.cur;
+  fillFeedback(i);
+  $('btnNext').textContent = '돌아가기';
+  panel('after');
+}
+function nextStep() {
+  if (S.phase === 'review') { S.phase = 'turn'; renderTurn(); return; }
+  var left = TURNS[S.turn].fronts.filter(function (id) { return S.picks[id - 1] === undefined; }).length;
+  if (left) { renderTurn(); return; }
+  if (S.turn < TURNS.length - 1) { S.turn++; renderTurn(); window.scrollTo(0, 0); }
   else showEnd();
 }
 
@@ -180,6 +249,12 @@ function showEnd() {
   fillSceneSelect($('selPivot'), true);
   $('endErr').textContent = '';
   show('vEnd');
+  if (!MVEND) MVEND = MapView.create({ canvas: $('endCv'), overlay: $('endOv'), interactive: false, token: false });
+  MVEND.resize();
+  var st = {}, bd = {};
+  Object.keys(NODE_POS).forEach(function (k) { st[k] = 'done'; });
+  SCENES.forEach(function (sc, i) { bd[sc.node] = LETTERS[S.picks[i]]; });
+  MVEND.setNodes(st); MVEND.setBadges(bd); MVEND.setRoute(visitedNodes());
 }
 function toResult() {
   if ($('selPivot').value === '' || $('txtPivot').value.trim().length < 5) {
@@ -222,6 +297,8 @@ function submit() {
   var pivIdx = +$('selPivot').value;
   var detail = {
     picks: S.picks.map(function (p) { return LETTERS[p]; }),
+    order: S.order.map(function (i) { return i + 1; }),
+    dice: S.dice.map(function (d) { return d ? d.n : null; }),
     stats: S.stats,
     sameAsHistory: sameCount(),
     pivotal: { scene: pivIdx + 1, reason: $('txtPivot').value.trim() },
@@ -289,7 +366,10 @@ function init() {
   renderBg();
   $('btnLogin').addEventListener('click', login);
   $('btnStart').addEventListener('click', startSim);
-  $('btnNext').addEventListener('click', nextScene);
+  $('btnNext').addEventListener('click', nextStep);
+  $('btnRoll').addEventListener('click', rollDice);
+  $('btnAfterDice').addEventListener('click', showFeedback);
+  window.addEventListener('resize', function () { if (MV && !$('vSim').hidden) MV.resize(); if (MVEND && !$('vEnd').hidden) MVEND.resize(); });
   $('btnToResult').addEventListener('click', toResult);
   $('btnEffect').addEventListener('click', showEffect);
   $('btnSubmit').addEventListener('click', submit);

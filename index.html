@@ -47,25 +47,48 @@
     <button id="btnStart" class="btn" type="button">시뮬레이션 시작하기</button>
   </section>
 
-  <!-- 시뮬레이션 -->
-  <section id="vSim" class="card" hidden>
+  <!-- 보드 -->
+  <section id="vSim" class="card board-card" hidden>
     <div class="bar"><span id="simProg" class="prog"></span><span id="simDate" class="date"></span></div>
-    <figure class="map" aria-label="전쟁 주요 거점 도식">
-      <svg id="mapSvg" data-no-gloss viewBox="0 0 100 100" role="img"></svg>
-      <figcaption>거점 위치만 단순하게 나타낸 도식이야. 실제 지도와는 달라.</figcaption>
-    </figure>
-    <div class="fiction" role="note"><b>꼭 읽어 줘.</b> 장면 속 상황과 선택지는 수업을 위해 꾸민 거야. 실제 대화 기록이 아니라 상황을 대화 형태로 바꾼 창작이야.</div>
-    <div class="scene">
-      <p class="place"><span id="simArea" class="chip alt"></span> <span id="simPlace"></span></p>
-      <p id="simSit" class="sit"></p>
-      <p id="simNote" class="sub" hidden></p>
-    </div>
-    <div id="choices" class="choices"></div>
-    <div id="after" hidden>
-      <div class="fb real"><p class="fb-h">실제 역사에서는</p><p id="fbReal"></p><p id="fbBook" class="book" hidden></p></div>
-      <div class="fb other"><p class="fb-h">같은 시기 다른 현장에선</p><p id="fbOther"></p></div>
-      <p id="fbExtra" class="extra" hidden></p>
-      <button id="btnNext" class="btn" type="button">다음 장면으로</button>
+    <div class="board">
+      <div class="mapcol">
+        <div class="mapwrap"><canvas id="mapCv" aria-hidden="true"></canvas><div id="mapOv" class="mapov" data-no-gloss></div></div>
+        <p class="sub cap">거점 위치만 단순하게 나타낸 도식이야. 실제 지도와는 달라.</p>
+      </div>
+      <div class="panel">
+        <!-- 이번 시기 -->
+        <div id="pTurn">
+          <h2 id="turnTitle"></h2>
+          <p id="turnNote" class="sub"></p>
+          <div id="frontBtns" class="choices"></div>
+          <p id="moveMsg" class="sub" role="status"></p>
+        </div>
+        <!-- 장면 -->
+        <div id="pScene" hidden>
+          <div class="fiction" role="note"><b>꼭 읽어 줘.</b> 장면 속 상황과 선택지는 수업을 위해 꾸민 거야. 실제 대화 기록이 아니라 상황을 대화 형태로 바꾼 창작이야.</div>
+          <p class="place"><span id="simArea" class="chip alt"></span> <span id="simPlace"></span></p>
+          <p id="simSit" class="sit"></p>
+          <p id="simNote" class="sub" hidden></p>
+          <div id="choices" class="choices"></div>
+        </div>
+        <!-- 주사위 -->
+        <div id="pDice" hidden>
+          <h2>선택의 영향을 주사위로 정해 보자</h2>
+          <p class="sub">주사위는 게임용이야. 눈이 몇이 나와도 실제 역사는 바뀌지 않아.</p>
+          <div id="dice" class="dice" aria-live="polite"><span class="dice-face" id="diceFace"></span></div>
+          <p id="diceMsg" class="match" role="status"></p>
+          <button id="btnRoll" class="btn" type="button">주사위 굴리기</button>
+          <button id="btnAfterDice" class="btn" type="button" hidden>실제 역사 보기</button>
+        </div>
+        <!-- 피드백 -->
+        <div id="after" hidden>
+          <p id="fbPick" class="match"></p>
+          <div class="fb real"><p class="fb-h">실제 역사에서는</p><p id="fbReal"></p><p id="fbBook" class="book" hidden></p></div>
+          <div class="fb other"><p class="fb-h">같은 시기 다른 현장에선</p><p id="fbOther"></p></div>
+          <p id="fbExtra" class="extra" hidden></p>
+          <button id="btnNext" class="btn" type="button">다음</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -78,6 +101,8 @@
       <div class="endstat"><span>명과의 관계</span><b id="endG"></b></div>
     </div>
     <p id="endMatch" class="match"></p>
+    <h3>내가 지나온 길</h3>
+    <div class="mapwrap endmap"><canvas id="endCv" aria-hidden="true"></canvas><div id="endOv" class="mapov" data-no-gloss></div></div>
     <ol id="endList" class="endlist"></ol>
     <div class="ask">
       <p class="tag">토론 질문</p>
@@ -149,6 +174,7 @@
 </main>
 
 <script src="data.js"></script>
+<script src="map.js"></script>
 <script src="focus_guard.js"></script>
 <script src="glossary.js"></script>
 <script src="app.js"></script>

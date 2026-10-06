@@ -95,16 +95,34 @@ var SCENES = [
   }
 ];
 
-/* 지도 도식 — 실제 지도가 아니라 거점 위치만 단순화한 배치(좌표는 viewBox 0~100) */
-var MAP_NODES = {
-  pyeongyang: { x: 42, y: 14, label: '평양성' },
-  hanseong:   { x: 40, y: 38, label: '한성' },
-  uiryeong:   { x: 60, y: 66, label: '의령' },
-  jinju:      { x: 52, y: 76, label: '진주성' },
-  dongnae:    { x: 80, y: 74, label: '동래성' },
-  hansando:   { x: 62, y: 90, label: '한산도' },
-  myeongnyang:{ x: 30, y: 90, label: '명량·노량' }
+/* 지도 도식 — 실제 지도가 아니라 거점 위치만 단순화한 배치(설계 좌표 80x100) */
+var NODE_POS = {
+  pyeongyang:  { x: 28, y: 14, label: '평양성' },
+  hanseong:    { x: 30, y: 38, label: '한성' },
+  uiryeong:    { x: 54, y: 56, label: '의령' },
+  jinju:       { x: 36, y: 70, label: '진주성' },
+  dongnae:     { x: 68, y: 70, label: '동래성' },
+  hansando:    { x: 50, y: 88, label: '한산도' },
+  myeongnyang: { x: 22, y: 84, label: '명량·노량' }
 };
+
+/* 시기(차례) — 한 시기에 갈 수 있는 현장(scene id). 한 시기의 현장은 모두 거친 뒤 다음 시기로 간다.
+ * 순서는 핸드오프 문서의 장면 순서(진주 → 명군 평양성)를 따른다. */
+var TURNS = [
+  { fronts: [1], note: '' },
+  { fronts: [2, 3], label: '1592년 4월(음력) 하순', note: '이 시기에는 두 현장에서 동시에 일이 벌어져. 어디부터 가 볼지는 네가 정해.' },
+  { fronts: [4], note: '' },
+  { fronts: [5], note: '' },
+  { fronts: [6], note: '' },
+  { fronts: [7], note: '' }
+];
+
+/* 주사위(게임용) — 눈에 따라 선택이 가상 자원에 미치는 폭만 달라진다. 실제 역사 결과는 바뀌지 않는다. */
+function diceEffect(n) {
+  if (n <= 2) return { up: 1, down: 2 };
+  if (n <= 4) return { up: 1, down: 1 };
+  return { up: 2, down: 1 };
+}
 
 /* 도입 비교표 — 학생이 먼저 채운다. 교과서 문장은 교사 확인이 끝난 것만 reveal 에 둔다. */
 var BG_TABLE = [
