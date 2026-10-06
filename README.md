@@ -13,7 +13,7 @@ history26 포털용 개별 수업 웹앱. plain HTML/CSS/JS, 빌드 없음. GitH
 
 - 인물(선비·무관·백성·여인·승려): `img/avatar_<key>.png`(서 있음)와 `_walk.png`(옆모습, 이동 중). 제미나이 원본에서 배경·워터마크를 지우고 높이 64px로 줄여 팔레트를 정리한 것이다. 이미지가 없으면 `data.js`의 `AVATARS` 코드 도트로 대신한다.
 
-- 거점 그림: 기본은 `map.js`가 코드로 그린 도트이고, `img/node_<거점키>.png`(투명 배경)를 넣으면 그 거점만 그 그림으로 바뀐다(키: pyeongyang, hanseong, uiryeong, jinju, dongnae, hansando, myeongnyang). 너비는 지도 14칸에 맞춰 비율대로 줄여 그린다.
+- 거점 그림: 기본은 `map.js`가 코드로 그린 도트이고, `img/node_<거점키>.png`(투명 배경)를 넣고 `data.js`의 `NODE_IMAGES`에 키를 적으면 그 거점만 그 그림으로 바뀐다(키: pyeongyang, hanseong, uiryeong, jinju, dongnae, hansando, myeongnyang). 너비는 지도 14칸에 맞춰 비율대로 줄여 그린다.
 
 ## 파일
 `index.html` 뼈대 · `style.css` · `data.js` 콘텐츠(장면·시기·거점 좌표·낱말 풀이) · `app.js` 로직 · `map.js` 도트 지도 · `focus_guard.js`, `glossary.js`(history26 `snippets/` 사본)

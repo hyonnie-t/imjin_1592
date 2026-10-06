@@ -122,6 +122,7 @@ var MapView = (function () {
   /* 손으로 찍은 거점 그림: img/node_<key>.png (투명 배경). 있으면 코드 그림 대신 쓴다. 너비는 NODE_PNG_W 격자 칸에 맞춘다 */
   var NODE_PNG_W = 14, nodeImgCache = {};
   function nodeImg(key, onLoad) {
+    if (typeof NODE_IMAGES === 'undefined' || NODE_IMAGES.indexOf(key) === -1) return null; // 목록에 있는 거점만 시도(없는 파일 요청 방지)
     var src = 'img/node_' + key + '.png', im = nodeImgCache[src];
     if (im === undefined) {
       im = nodeImgCache[src] = new Image();
