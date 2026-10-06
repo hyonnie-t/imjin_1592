@@ -119,15 +119,16 @@ var MapView = (function () {
   var BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
   function bayer(x, y) { return BAYER[(y & 3) * 4 + (x & 3)] / 16 - .5; }
 
-  /* 손으로 찍은 거점 그림: img/node_<key>.png (투명 배경). 있으면 코드 그림 대신 쓴다. 너비는 NODE_PNG_W 격자 칸에 맞춘다 */
-  var NODE_PNG_W = 14, nodeImgCache = {};
-  function nodeImg(key, onLoad) {
-    if (typeof NODE_IMAGES === 'undefined' || NODE_IMAGES.indexOf(key) === -1) return null; // 목록에 있는 거점만 시도(없는 파일 요청 방지)
-    var src = 'img/node_' + key + '.png', im = nodeImgCache[src];
+  /* 손으로 찍은 거점 그림: img/node_<키>.png (투명 배경). NODE_IMAGES에 적힌 거점만 불러와 코드 그림 대신 쓴다.
+   * NODE_IMAGES[키] = { w: 지도 몇 칸 너비로 그릴지(기본 14), done: true면 다녀온 뒤 node_<키>_done.png로 바뀐다 } */
+  var nodeImgCache = {};
+  function nodeImg(key, done, onLoad) {
+    var cfgN = (typeof NODE_IMAGES !== 'undefined') ? NODE_IMAGES[key] : null;
+    if (!cfgN) return null; // 목록에 있는 거점만 시도(없는 파일 요청 방지)
+    var src = 'img/node_' + key + ((done && cfgN.done) ? '_done' : '') + '.png', im = nodeImgCache[src];
     if (im === undefined) {
       im = nodeImgCache[src] = new Image();
       im.onload = function () { im.__ok = true; if (onLoad) onLoad(); };
-      im.onerror = function () { im.__bad = true; };
       im.src = src;
     }
     return (im && im.__ok && im.naturalWidth > 0) ? im : null;
@@ -367,8 +368,8 @@ var MapView = (function () {
       Object.keys(NODE_POS).forEach(function (k) {
         var st = nodeState[k] || 'locked', q = pos(k);
         var spr = (st === 'locked') ? spriteCanvas('fog', true, '#8d97a8') : spriteCanvas(ICON[k], true);
-        var png = (st === 'locked') ? null : nodeImg(k, draw);
-        if (png) spr = { width: NODE_PNG_W, height: Math.max(8, Math.round(NODE_PNG_W * png.naturalHeight / png.naturalWidth)) };
+        var png = (st === 'locked') ? null : nodeImg(k, st === 'done', draw);
+        if (png) { var pw = NODE_IMAGES[k].w || 14; spr = { width: pw, height: Math.max(8, Math.round(pw * png.naturalHeight / png.naturalWidth)) }; }
         var bob = (st === 'locked') ? Math.round(Math.sin(frame / 6 + q.x) * 1) : 0;
         var x = Math.round(q.x - spr.width / 2), y = Math.round(q.y - spr.height / 2) + bob;
         if (st !== 'locked' && ICON[k] !== 'ship') { // 땅 위 그림자
@@ -400,7 +401,7 @@ var MapView = (function () {
       dc.drawImage(lo, 0, 0, cv.width, cv.height);
       pngNodes.forEach(function (n) { // 손으로 찍은 거점 그림
         var tw = n[3] * scale, th = n[4] * scale;
-        dc.imageSmoothingEnabled = n[0].naturalWidth > tw;
+        dc.imageSmoothingEnabled = n[0].naturalWidth > tw; dc.imageSmoothingQuality = 'high';
         dc.drawImage(n[0], Math.round(n[1] * scale), Math.round(n[2] * scale), tw, th);
         dc.imageSmoothingEnabled = false;
       });
