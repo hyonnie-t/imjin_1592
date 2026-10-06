@@ -32,7 +32,7 @@ var SCENES = [
     extra: '의병은 정규군이 아니어서 곡식 사용 문제로 경상도 관찰사와 갈등을 겪었다.'
   },
   {
-    id: 3, node: 'hanseong', place: '한성 조정', area: '한성', date: '1592년 4월(음력) 28~30일',
+    id: 3, node: 'hanseong', place: '한성 조정', area: '수도', date: '1592년 4월(음력) 28~30일',
     situation: '충주 방어선이 무너졌다는 소식이 도착했다. 어전 회의에서 한성에서 결전하자는 의견과 피란하자는 의견이 맞선다. 왕으로서 어떻게 할까?',
     choices: [
       { t: '한성에서 끝까지 방어한다', up: 's', down: 'g' },
@@ -123,6 +123,22 @@ function diceEffect(n) {
   if (n <= 4) return { up: 1, down: 1 };
   return { up: 2, down: 1 };
 }
+
+
+/* 말(인물) 도트 — 10x14, 겉선은 map.js가 자동으로 둘러 준다. 위 12줄은 몸, 걷는 동안 아래 2줄(다리)이 번갈아 바뀐다.
+ * 글자: K 검정(갓·머리·신) w 흰옷 u 푸른 옷 e 붉은색 s 살색 o 베옷 g 회색 n 갈색 p 분홍 c 초록 */
+var AVATARS = [
+  { key: 'seonbi', name: '선비', desc: '글을 읽고 학문을 닦던 사람', pants: 'w',
+    body: ['...KKKK...', '...KKKK...', '.KKKKKKKK.', '...kssk...', '...ssss...', '..wwwwww..', '.wwwwwwww.', '.wwuuuuww.', '.wwwwwwww.', '.wwwwwwww.', '.wwwwwwww.', '..wwwwww..'] },
+  { key: 'mugwan', name: '무관', desc: '군대의 일을 맡던 사람', pants: 'w',
+    body: ['....e.....', '...KKKK...', '..KKKKKK..', '.KKKKKKKK.', '...kssk...', '...ssss...', '..uuuuuu..', '.uuuyyuuu.', '.eeeeeeee.', '.uuuuuuuu.', '.uuuuuuuu.', '..uuuuuu..'] },
+  { key: 'baekseong', name: '백성', desc: '농사를 짓고 살림을 꾸리던 사람', pants: 'o',
+    body: ['....KK....', '...KKKK...', '..wwwwww..', '...kssk...', '...ssss...', '..oooooo..', '.oooooooo.', '.oooooooo.', '.nnnnnnnn.', '..oooooo..', '..oooooo..', '..oooooo..'] },
+  { key: 'yeoin', name: '여인', desc: '조선 시대를 살던 여성', pants: 'c',
+    body: ['...KKKK...', '..KKKKKKe.', '..KssssK..', '...kssk...', '...ssss...', '..pppppp..', '.pppeeppp.', '..pppppp..', '..cccccc..', '.cccccccc.', '.cccccccc.', '.cccccccc.'] },
+  { key: 'seungnyeo', name: '승려', desc: '절에서 수행하던 사람', pants: 'g',
+    body: ['....ss....', '...ssss...', '...kssk...', '...ssss...', '..gggggg..', '.gggwwggg.', '.gggggggg.', '.ggnnnngg.', '.gggggggg.', '.gggggggg.', '.gggggggg.', '..gggggg..'] }
+];
 
 /* 도입 비교표 — 학생이 먼저 채운다. 교과서 문장은 교사 확인이 끝난 것만 reveal 에 둔다. */
 var BG_TABLE = [

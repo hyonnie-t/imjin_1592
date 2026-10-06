@@ -13,15 +13,13 @@ var MapView = (function () {
     { x: 50, y: 88, r: 5 }, { x: 78, y: 96, r: 9 }, { x: 2, y: 2, r: 11 }
   ].map(function (b) { return { x: ux(b.x), y: uy(b.y), r: b.r * GW / DW }; });
 
-  var PAL = { k: '#2b2118', w: '#efe3c6', r: '#8a3a2a', g: '#7a7f87', b: '#3b5d9c', y: '#e0b84a', n: '#8a5a2b', s: '#f0c9a0', e: '#c0392b', h: '#ffffff', m: '#9aa0a8' };
+  var PAL = { k: '#2b2118', w: '#efe3c6', r: '#8a3a2a', g: '#7a7f87', b: '#3b5d9c', y: '#e0b84a', n: '#8a5a2b', s: '#f0c9a0', e: '#c0392b', h: '#ffffff', m: '#9aa0a8', K: '#1c1c1c', o: '#c9a46a', p: '#e58aa0', c: '#2f8f7a', u: '#3b5d9c' };
   var SPR = {
     castle: ['k.k.k..k.k.k', 'kwkwkkkkwkwk', 'kwwwwwwwwwwk', 'kwwwwwwwwwwk', 'kwwwwkkwwwwk', 'kwwwkggkwwwk', 'kwwwkggkwwwk', 'kwwwkggkwwwk', 'kkkkkkkkkkkk'],
     palace: ['kkkkkkkkkkkk', 'krrrrrrrrrrk', '.kkkkkkkkkk.', '..kwwwwwwk..', '..kwkkkkwk..', '..kwkggkwk..', '..kwkggkwk..', '..kkkkkkkk..'],
     tent:   ['.....kk..e..', '....kwwk.ee.', '...kwwwwkke.', '..kwwwwwwk..', '.kwwwkkwwwk.', 'kwwwwkgkwwwk', 'kkkkkkkkkkkk'],
     ship:   ['......k.....', '.....kyk....', '....kyyyk...', '....kyyyk...', '.....kyk....', '.kkkkkkkkkk.', '.knnnnnnnnk.', '..knnnnnnk..', '...kkkkkk...'],
-    fog:    ['..kkkkkkkk..', '.kmmmmmmmmk.', 'kmmmkkkkmmmk', 'kmmkmmmmkmmk', 'kmmmmmmkmmmk', 'kmmmmmkmmmmk', 'kmmmmkmmmmmk', 'kmmmmmmmmmmk', 'kmmmmkmmmmmk', '.kmmmmmmmmk.', '..kkkkkkkk..'],
-    hero1:  ['..kkkk..', '.kkkkkk.', '..kssk..', '..kssk..', '.kwwwwk.', 'kwwwwwwk', '.kwwwwk.', '.kwkkwk.', '.kk..kk.'],
-    hero2:  ['..kkkk..', '.kkkkkk.', '..kssk..', '..kssk..', '.kwwwwk.', 'kwwwwwwk', '.kwwwwk.', '..kwwk..', '..kkkk..']
+    fog:    ['..kkkkkkkk..', '.kmmmmmmmmk.', 'kmmmkkkkmmmk', 'kmmkmmmmkmmk', 'kmmmmmmkmmmk', 'kmmmmmkmmmmk', 'kmmmmkmmmmmk', 'kmmmmmmmmmmk', 'kmmmmkmmmmmk', '.kmmmmmmmmk.', '..kkkkkkkk..']
   };
   var ICON = { dongnae: 'castle', uiryeong: 'tent', hanseong: 'palace', hansando: 'ship', jinju: 'castle', pyeongyang: 'castle', myeongnyang: 'ship' };
   var CAMP = { x: 26, y: 54 };
@@ -69,6 +67,27 @@ var MapView = (function () {
     }
   }
 
+  /* 인물: AVATARS 한 명의 한 프레임(0 서 있음/1 걸음)을 겉선 포함 canvas로 */
+  var heroCache = {};
+  function heroCanvas(key, frame) {
+    var ck = key + frame; if (heroCache[ck]) return heroCache[ck];
+    var av = AVATARS.filter(function (a) { return a.key === key; })[0] || AVATARS[0];
+    var p = av.pants;
+    var legs = frame ? ['...' + p + p + p + p + '...', '...KKKK...'] : ['..' + p + p + '..' + p + p + '..', '..KK..KK..'];
+    var rows = av.body.concat(legs), w = rows[0].length, h = rows.length;
+    var cv = document.createElement('canvas'); cv.width = w + 2; cv.height = h + 2;
+    var c = cv.getContext('2d'), x, y;
+    function on(xx, yy) { return xx >= 0 && yy >= 0 && yy < h && xx < w && rows[yy].charAt(xx) !== '.'; }
+    c.fillStyle = '#2b2118';
+    for (y = -1; y <= h; y++) for (x = -1; x <= w; x++) {
+      if (!on(x, y) && (on(x - 1, y) || on(x + 1, y) || on(x, y - 1) || on(x, y + 1))) c.fillRect(x + 1, y + 1, 1, 1);
+    }
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
+      var ch = rows[y].charAt(x); if (ch !== '.') { c.fillStyle = PAL[ch]; c.fillRect(x + 1, y + 1, 1, 1); }
+    }
+    return (heroCache[ck] = cv);
+  }
+
   var sprCache = {};
   function spriteCanvas(name) {
     if (sprCache[name]) return sprCache[name];
@@ -91,7 +110,7 @@ var MapView = (function () {
     var lc = lo.getContext('2d'), dc = cv.getContext('2d');
     var scale = 4, frame = 0, timer = null;
     var nodeState = {}, badges = {}, route = [], btn = {};
-    var tok = { x: ux(CAMP.x), y: uy(CAMP.y), moving: false };
+    var tok = { x: ux(CAMP.x), y: uy(CAMP.y), moving: false }, avatarKey = 'seonbi';
     var mv = {};
 
     function pos(k) { var p = NODE_POS[k]; return { x: ux(p.x), y: uy(p.y) }; }
@@ -158,8 +177,9 @@ var MapView = (function () {
       });
       // 말
       if (cfg.token !== false) {
-        var hero = spriteCanvas(tok.moving && (frame % 2) ? 'hero2' : 'hero1');
-        lc.drawImage(hero, Math.round(tok.x - hero.width / 2 + 7), Math.round(tok.y - hero.height + 8));
+        var hero = heroCanvas(avatarKey, tok.moving && (frame % 2) ? 1 : 0);
+        var hx = (tok.x + 9 + hero.width / 2 > GW) ? tok.x - 9 - hero.width / 2 : tok.x + 9 - hero.width / 2;
+        lc.drawImage(hero, Math.round(hx), Math.round(tok.y - hero.height + 9));
       }
       dc.imageSmoothingEnabled = false;
       dc.drawImage(lo, 0, 0, cv.width, cv.height);
@@ -192,6 +212,7 @@ var MapView = (function () {
         if (t < 1) setTimeout(step, 40); else { tok.moving = false; draw(); cb(); }
       })();
     };
+    mv.setAvatar = function (k) { avatarKey = k; draw(); };
     mv.destroy = function () { if (timer) clearInterval(timer); timer = null; };
 
     build();
@@ -199,5 +220,5 @@ var MapView = (function () {
     startLoop();
     return mv;
   }
-  return { create: create };
+  return { create: create, heroCanvas: heroCanvas };
 })();

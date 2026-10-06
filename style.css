@@ -102,3 +102,12 @@ details.hint summary{cursor:pointer;min-height:var(--tap);display:flex;align-ite
 .choice small{display:block;font-weight:400;color:var(--sub)}
 .endstats{grid-template-columns:repeat(3,1fr)}
 .endstat b{font-size:1.4rem}
+
+/* 인물 고르기 */
+.avatars{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:720px){.avatars{grid-template-columns:repeat(5,1fr)}}
+.avatar{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:var(--tap);padding:12px 8px;border:2px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font:inherit;cursor:pointer;text-align:center}
+.avatar canvas{image-rendering:pixelated;image-rendering:crisp-edges;background:#93bd6b;border-radius:6px;width:96px;height:128px}
+.avatar b{font-size:1.1rem}
+.avatar small{color:var(--sub);font-size:1rem;line-height:1.4}
+.avatar[aria-checked="true"]{border-color:var(--indigo);background:var(--indigo-bg);box-shadow:0 0 0 2px var(--indigo)}

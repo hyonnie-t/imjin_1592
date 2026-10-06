@@ -14,11 +14,11 @@ var CONFIG = {
 };
 
 var LETTERS = ['A', 'B', 'C'];
-var S = { sid: '', name: '', preview: false, turn: 0, cur: -1, phase: 'turn', order: [], dice: [], picks: [], stats: null, submitted: false, guardOn: false };
+var S = { avatar: 'seonbi', sid: '', name: '', preview: false, turn: 0, cur: -1, phase: 'turn', order: [], dice: [], picks: [], stats: null, submitted: false, guardOn: false };
 
 function $(id) { return document.getElementById(id); }
 function show(id) {
-  ['vLogin', 'vIntro', 'vSim', 'vEnd', 'vResult', 'vDone'].forEach(function (v) { $(v).hidden = (v !== id); });
+  ['vLogin', 'vAvatar', 'vIntro', 'vSim', 'vEnd', 'vResult', 'vDone'].forEach(function (v) { $(v).hidden = (v !== id); });
   $('stats').hidden = !(id === 'vSim' || id === 'vEnd' || id === 'vResult');
   $('statNote').hidden = $('stats').hidden;
   window.scrollTo(0, 0);
@@ -46,7 +46,29 @@ function login() {
   var sid = $('inSid').value.trim(), name = $('inName').value.trim();
   if (!parseSid(sid) || !name) { $('loginErr').textContent = '학번 5자리와 이름을 입력해 줘.'; return; }
   S.sid = sid; S.name = name;
-  show('vIntro');
+  openAvatar();
+}
+
+/* ── 인물 고르기 ── */
+function openAvatar() {
+  show('vAvatar');
+  var box = $('avatarList'); box.innerHTML = '';
+  AVATARS.forEach(function (a) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'avatar'; b.setAttribute('role', 'radio'); b.setAttribute('data-key', a.key);
+    b.setAttribute('aria-checked', a.key === S.avatar ? 'true' : 'false');
+    var src = MapView.heroCanvas(a.key, 0), cv = document.createElement('canvas');
+    cv.width = src.width * 8; cv.height = src.height * 8;
+    var c = cv.getContext('2d'); c.imageSmoothingEnabled = false; c.drawImage(src, 0, 0, cv.width, cv.height);
+    var nm = document.createElement('b'); nm.textContent = a.name;
+    var ds = document.createElement('small'); ds.textContent = a.desc;
+    b.appendChild(cv); b.appendChild(nm); b.appendChild(ds);
+    b.addEventListener('click', function () {
+      S.avatar = a.key;
+      Array.prototype.forEach.call(box.children, function (x) { x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
+    });
+    box.appendChild(b);
+  });
 }
 
 /* ── 도입 비교표 ── */
@@ -82,6 +104,7 @@ function nodeStates() {
   var m = {};
   Object.keys(NODE_POS).forEach(function (k) { m[k] = 'locked'; });
   S.order.forEach(function (i) { m[nodeOfScene(i)] = 'done'; });
+  if (S.phase !== 'turn' && S.cur >= 0 && S.picks[S.cur] === undefined) m[nodeOfScene(S.cur)] = 'here';
   if (S.phase === 'turn') TURNS[S.turn].fronts.forEach(function (id) {
     var i = id - 1; if (S.picks[i] === undefined) m[nodeOfScene(i)] = 'open';
   });
@@ -96,7 +119,7 @@ function startSim() {
   renderStats();
   show('vSim');
   if (!MV) MV = MapView.create({ canvas: $('mapCv'), overlay: $('mapOv'), onNode: onNode });
-  MV.resize(); MV.placeToken(null);
+  MV.setAvatar(S.avatar); MV.resize(); MV.placeToken(null);
   renderTurn();
 }
 function renderTurn() {
@@ -296,6 +319,7 @@ function submit() {
   err.textContent = '';
   var pivIdx = +$('selPivot').value;
   var detail = {
+    avatar: S.avatar,
     picks: S.picks.map(function (p) { return LETTERS[p]; }),
     order: S.order.map(function (i) { return i + 1; }),
     dice: S.dice.map(function (d) { return d ? d.n : null; }),
@@ -366,6 +390,7 @@ function init() {
   renderBg();
   $('btnLogin').addEventListener('click', login);
   $('btnStart').addEventListener('click', startSim);
+  $('btnAvatar').addEventListener('click', function () { show('vIntro'); });
   $('btnNext').addEventListener('click', nextStep);
   $('btnRoll').addEventListener('click', rollDice);
   $('btnAfterDice').addEventListener('click', showFeedback);
@@ -376,7 +401,7 @@ function init() {
   $('btnCopy').addEventListener('click', function () { copyText(); });
   if (parseSid($('inSid').value) && $('inName').value.trim()) {
     S.sid = $('inSid').value.trim(); S.name = $('inName').value.trim();
-    show('vIntro');
+    openAvatar();
   } else show('vLogin');
   Glossary.start({ terms: GLOSSARY });
 }
