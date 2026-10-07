@@ -141,3 +141,84 @@ details.hint summary{cursor:pointer;min-height:var(--tap);display:flex;align-ite
 .checks li{margin:2px 0}
 .checks label{display:flex;gap:10px;align-items:flex-start;min-height:var(--tap);padding:6px 0;font-weight:400}
 .checks input{width:22px;height:22px;margin-top:3px;flex:none}
+
+/* ── 팝업(장면·결과) ── 지도 위에 얹는 카드. 좁은 화면은 아래에서 올라오는 시트, 900px 이상은 가운데 카드 */
+:root{--wood:#5b4630;--parch:#fffaf0;--parch2:#f7ecd2;--gold:#e3b95a;--serif:'Noto Serif KR','Nanum Myeongjo','Batang',serif}
+body.modal-open{overflow:hidden}
+.pop{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.pop-back{position:absolute;inset:0;background:rgba(18,22,40,.5);animation:fadein .25s both}
+.pop-card{position:relative;width:100%;max-width:680px;max-height:84vh;max-height:84dvh;overflow-y:auto;overscroll-behavior:contain;
+  background:linear-gradient(180deg,var(--parch),var(--parch2));border:3px solid var(--wood);border-bottom:0;border-radius:24px 24px 0 0;
+  box-shadow:0 -12px 40px rgba(0,0,0,.4),inset 0 0 0 3px var(--parch),inset 0 0 0 4px rgba(91,70,48,.35);animation:sheetup .38s cubic-bezier(.2,.9,.25,1) both;outline:0}
+@media(min-width:900px){
+  .pop{align-items:center;padding:24px}
+  .pop-card{border-bottom:3px solid var(--wood);border-radius:20px;max-height:88vh;animation:cardpop .32s cubic-bezier(.2,.9,.25,1.2) both}
+}
+@keyframes fadein{from{opacity:0}}
+@keyframes sheetup{from{transform:translateY(60px);opacity:0}}
+@keyframes cardpop{from{transform:scale(.92);opacity:0}}
+@keyframes riseup{from{transform:translateY(10px);opacity:0}}
+.pop-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:14px;padding:14px 20px 12px;
+  background:linear-gradient(180deg,#34437a,var(--indigo));color:#fff;border-bottom:3px solid var(--gold)}
+.pop-av{flex:none;width:56px;height:56px;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;background:#93bd6b;border:2px solid #fff;border-radius:12px;padding:3px;box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.pop-headtxt{min-width:0}
+.pop-kicker{margin:0 0 2px;font-size:1rem;color:#dfe5ff;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.pop-stage{background:var(--seal);color:#fff;font-weight:800;padding:0 10px;border-radius:999px;border:1.5px solid rgba(255,255,255,.7)}
+.pop-head h2{margin:0;font-family:var(--serif);font-size:1.55rem;line-height:1.25;letter-spacing:-.01em}
+.pop-body{padding:18px 20px 22px}
+.pop-body>div>*{animation:riseup .4s both}
+.pop-body>div>*:nth-child(2){animation-delay:.07s}.pop-body>div>*:nth-child(3){animation-delay:.14s}
+.pop-body>div>*:nth-child(4){animation-delay:.21s}.pop-body>div>*:nth-child(5){animation-delay:.28s}
+.pop-body>div>*:nth-child(n+6){animation-delay:.35s}
+.pop .fiction{font-size:1rem;font-weight:600;padding:8px 12px;margin:0 0 14px;border-radius:10px;background:var(--amber-bg);border:1.5px dashed #d2a63f}
+.pop .sit{position:relative;margin:0 0 16px;padding:14px 16px 14px 20px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 0 rgba(91,70,48,.12);font-size:1.08rem;line-height:1.8}
+.pop .sit::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:5px;border-radius:0 4px 4px 0;background:var(--seal)}
+.pop .choices{gap:12px}
+.pop .choice{position:relative;display:flex;align-items:center;gap:14px;min-height:60px;padding:12px 16px;border:2px solid var(--wood);border-radius:14px;background:#fff;font-size:1.05rem;font-weight:600;line-height:1.5;
+  box-shadow:0 4px 0 rgba(91,70,48,.35);transition:transform .12s,box-shadow .12s,background .15s,border-color .15s}
+.pop .choice .lt{flex:none;display:grid;place-items:center;width:36px;height:36px;margin:0;border-radius:50%;background:var(--indigo);color:#fff;font-weight:800;font-size:1.05rem;font-family:var(--serif)}
+.pop .choice:hover:not(:disabled){background:#f4f6ff;border-color:var(--indigo)}
+.pop .choice:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(91,70,48,.35)}
+.pop .choice:focus-visible{outline:3px solid #ffd24a;outline-offset:2px}
+.pop .choices.locked .choice{pointer-events:none}
+.pop .choices.locked .choice:not(.picked){opacity:.45;transform:scale(.985)}
+.pop .choice.picked{border-color:var(--seal);background:#fff1ec;box-shadow:0 0 0 3px rgba(176,58,46,.25);transform:translateY(3px);font-weight:700}
+.pop .choice.picked .lt{background:var(--seal)}
+/* 결과 */
+.pickcard{display:flex;align-items:center;gap:14px;padding:12px 16px;margin:0 0 14px;background:var(--indigo-bg);border:2px solid var(--indigo);border-radius:14px}
+.pickcard small{display:block;color:var(--indigo);font-weight:800}
+.pickcard p{margin:0;font-weight:700;line-height:1.5}
+.lt-badge{flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--indigo);color:#fff;font:800 1.2rem var(--serif)}
+.pop .rollbox{margin:0 0 14px}
+.pop .roll-row{border-radius:12px;padding:10px 14px;box-shadow:0 2px 0 rgba(91,70,48,.1)}
+.pop .roll-note{font-size:1rem}
+.pop .fb{margin:0 0 12px;padding:14px 16px;border:1px solid var(--line);border-left:6px solid var(--indigo);border-radius:12px;background:#fff;box-shadow:0 2px 0 rgba(91,70,48,.1)}
+.pop .fb.other{border-left-color:var(--jade)}
+.pop .fb-h{margin:0 0 6px;font-family:var(--serif);font-size:1.12rem}
+.pop .fb.real .fb-h::before{content:'📜 '}
+.pop .fb.other .fb-h::before{content:'🗺️ '}
+.pop .fb p:last-child{margin-bottom:0}
+.pop .book{border-left:4px solid var(--gold);background:var(--amber-bg);border-radius:0 8px 8px 0}
+.pop .extra{margin:0 0 12px;border-radius:12px}
+.pop #after .btn{position:sticky;bottom:0;margin-top:8px;min-height:52px;font-size:1.08rem;border-radius:14px;border-color:var(--wood);background:var(--indigo);box-shadow:0 4px 0 rgba(91,70,48,.5),0 -10px 14px 6px var(--parch2)}
+.pop #after .btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(91,70,48,.5),0 -10px 14px 6px var(--parch2)}
+@media(prefers-reduced-motion:reduce){.pop-back,.pop-card,.pop-body>div>*{animation:none}.pop .choice{transition:none}}
+
+/* 지도 옆 "갈 수 있는 현장" 버튼 */
+.choice.front{position:relative;padding-right:44px;border-color:var(--wood);box-shadow:0 3px 0 rgba(91,70,48,.3)}
+.choice.front::after{content:'›';position:absolute;right:16px;top:50%;transform:translateY(-52%);font-size:1.8rem;font-weight:700;color:var(--seal)}
+.choice.front:disabled{box-shadow:none;border-color:var(--line)}
+.choice.front:disabled::after{content:'✓';color:var(--jade);font-size:1.2rem}
+
+/* 일기 예시 문장 */
+.diaryex{margin:12px 0 4px;padding:14px 16px;background:linear-gradient(180deg,var(--parch),var(--parch2));border:2px solid var(--wood);border-radius:14px;box-shadow:0 3px 0 rgba(91,70,48,.25)}
+.dx-h{margin:0;font-family:var(--serif);font-weight:800;font-size:1.1rem}
+.dx-sub{margin:2px 0 8px}
+.dx-list{margin:0;padding:0;list-style:none;counter-reset:dx}
+.dx-list li{position:relative;counter-increment:dx;margin:0 0 8px;padding:8px 12px 8px 44px;background:#fff;border:1px solid var(--line);border-radius:10px;line-height:1.7}
+.dx-list li::before{content:counter(dx);position:absolute;left:10px;top:9px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--indigo);color:#fff;font-weight:800;font-size:1rem}
+.blank{display:inline-block;min-width:2.6em;margin:0 2px;text-align:center;color:var(--seal);font-weight:800;border-bottom:2px dashed var(--seal);line-height:1.2}
+.diaryex details.hint{background:#fff}
+.dx-sample-head{margin:8px 0 2px;font-weight:800;color:var(--indigo)}
+.dx-sample{margin:0 0 4px;line-height:1.8}
+@media(max-width:899px){body.modal-open{padding-bottom:62vh}} /* 시트가 덮는 만큼 페이지를 더 내릴 수 있게 해서 지도의 말이 시트 위에 남도록 한다 */

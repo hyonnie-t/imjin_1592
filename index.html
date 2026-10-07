@@ -71,23 +71,6 @@
           <div id="frontBtns" class="choices"></div>
           <p id="moveMsg" class="sub" role="status"></p>
         </div>
-        <!-- 장면 -->
-        <div id="pScene" hidden>
-          <div class="fiction" role="note"><b>꼭 읽어 줘.</b> 장면 속 상황과 선택지는 수업을 위해 꾸민 거야. 실제 대화 기록이 아니라 상황을 대화 형태로 바꾼 창작이야.</div>
-          <p class="place"><span id="simArea" class="chip alt"></span> <span id="simPlace"></span></p>
-          <p id="simSit" class="sit"></p>
-          <p id="simNote" class="sub" hidden></p>
-          <div id="choices" class="choices"></div>
-        </div>
-        <!-- 피드백 -->
-        <div id="after" hidden>
-          <p id="fbPick" class="match"></p>
-          <div id="rollBox" class="rollbox" role="status" aria-live="polite"></div>
-          <div class="fb real"><p class="fb-h">실제 역사에서는</p><p id="fbReal"></p><p id="fbBook" class="book" hidden></p></div>
-          <div class="fb other"><p class="fb-h">같은 시기 다른 현장에선</p><p id="fbOther"></p></div>
-          <p id="fbExtra" class="extra" hidden></p>
-          <button id="btnNext" class="btn" type="button">다음</button>
-        </div>
       </div>
     </div>
   </section>
@@ -104,12 +87,6 @@
     <h3>내가 지나온 길</h3>
     <div class="mapwrap endmap"><canvas id="endCv" aria-hidden="true"></canvas><div id="endOv" class="mapov" data-no-gloss></div></div>
     <ol id="endList" class="endlist"></ol>
-    <details class="hint">
-      <summary>💬 같이 이야기해 볼 질문</summary>
-      <p>내 수치가 높았는데 실제 역사와 다른 결과가 나온 장면은 어디였나? 왜 그런 어긋남이 생겼을까?</p>
-      <p>교과서 136쪽 소제목은 한산도 대첩을 전세를 바꾼 승리로 서술한다. 내가 고른 장면과 같을까, 다를까?</p>
-    </details>
-
     <h3>임진왜란 일기 쓰기</h3>
     <p id="diaryIntro" class="sub"></p>
     <label for="selDiary">일기로 남길 장면</label>
@@ -125,9 +102,14 @@
       <li><label><input type="checkbox"> 이 인물의 처지(신분·하는 일)가 드러나게 썼다</label></li>
       <li><label><input type="checkbox"> 내가 고른 선택에 대한 이 인물의 생각을 한 줄 넣었다</label></li>
     </ul>
+    <div id="diaryEx" class="diaryex" hidden>
+      <p class="dx-h">✍️ 이런 문장으로 시작해 봐</p>
+      <p class="sub dx-sub">…이 들어간 곳을 내 말로 채우면 돼. 그대로 베끼지 말고 내 인물의 생각으로 바꿔 써 줘.</p>
+      <ol id="dxList" class="dx-list"></ol>
+      <details id="dxSample" class="hint"><summary>다 쓴 일기는 이런 모습이야 (예시)</summary><p id="dxSampleHead" class="dx-sample-head"></p><p id="dxSampleText" class="dx-sample"></p></details>
+    </div>
     <label for="txtDiary">일기 (3문장 이상)</label>
     <textarea id="txtDiary" rows="8"></textarea>
-    <details class="hint"><summary>💡 막막하면 힌트 보기</summary><p id="hintDiary"></p></details>
     <p id="resErr" class="err" role="alert"></p>
     <button id="btnSubmit" class="btn" type="button">제출하기</button>
   </section>
@@ -145,6 +127,38 @@
     <details class="hint" id="copyFallback" hidden><summary>복사가 안 되면 여기서 직접 복사해</summary><textarea id="copyArea" rows="8" readonly></textarea></details>
   </section>
 </main>
+
+<!-- 장면·결과 팝업 (선택 → 결과가 지도 위에서 이어진다) -->
+<div id="pop" class="pop" hidden>
+  <div class="pop-back"></div>
+  <div id="popCard" class="pop-card" role="dialog" aria-modal="true" aria-labelledby="popTitle" tabindex="-1">
+    <header class="pop-head">
+      <img id="popAv" class="pop-av" alt="" aria-hidden="true">
+      <div class="pop-headtxt">
+        <p class="pop-kicker"><span id="popStage" class="pop-stage"></span><span id="simArea"></span></p>
+        <h2 id="popTitle"></h2>
+      </div>
+    </header>
+    <div class="pop-body">
+      <!-- 장면 -->
+      <div id="pScene" hidden>
+        <div class="fiction" role="note"><b>꼭 읽어 줘.</b> 장면 속 상황과 선택지는 수업을 위해 꾸민 거야. 실제 대화 기록이 아니라 상황을 대화 형태로 바꾼 창작이야.</div>
+        <p id="simSit" class="sit"></p>
+        <p id="simNote" class="sub" hidden></p>
+        <div id="choices" class="choices"></div>
+      </div>
+      <!-- 결과 -->
+      <div id="after" hidden>
+        <div class="pickcard"><span id="fbLetter" class="lt-badge"></span><div><small>내 선택</small><p id="fbPick"></p></div></div>
+        <div id="rollBox" class="rollbox" role="status" aria-live="polite"></div>
+        <div class="fb real"><p class="fb-h">실제 역사에서는</p><p id="fbReal"></p><p id="fbBook" class="book" hidden></p></div>
+        <div class="fb other"><p class="fb-h">같은 시기 다른 현장에선</p><p id="fbOther"></p></div>
+        <p id="fbExtra" class="extra" hidden></p>
+        <button id="btnNext" class="btn" type="button">다음</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="data.js"></script>
 <script src="map.js"></script>

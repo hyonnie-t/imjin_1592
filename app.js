@@ -19,6 +19,7 @@ var S = { avatar: 'seonbi', sid: '', name: '', preview: false, turn: 0, cur: -1,
 function $(id) { return document.getElementById(id); }
 function show(id) {
   ['vLogin', 'vAvatar', 'vIntro', 'vSim', 'vEnd', 'vDone'].forEach(function (v) { $(v).hidden = (v !== id); });
+  if (typeof setPop === 'function') setPop(false);
   $('stats').hidden = !(id === 'vSim' || id === 'vEnd');
   $('statNote').hidden = $('stats').hidden;
   window.scrollTo(0, 0);
@@ -115,7 +116,40 @@ function renderBg() {
 var MV = null, MVEND = null;
 function sceneByNode(node) { for (var i = 0; i < SCENES.length; i++) if (SCENES[i].node === node) return i; return -1; }
 function nodeOfScene(i) { return SCENES[i].node; }
-function panel(id) { ['pTurn', 'pScene', 'after'].forEach(function (p) { $(p).hidden = (p !== id); }); }
+var POP_FOCUS = null;
+function panel(id) {
+  ['pTurn', 'pScene', 'after'].forEach(function (p) { $(p).hidden = (p !== id); });
+  setPop(id !== 'pTurn');
+}
+function setPop(open) { // 장면·결과는 지도 위 팝업으로 보여 준다. 선택은 필수라 바깥 클릭·ESC로 닫지 않는다
+  var pop = $('pop'), was = !pop.hidden;
+  pop.hidden = !open;
+  document.body.classList.toggle('modal-open', open);
+  if (open) {
+    if (!was) POP_FOCUS = document.activeElement;
+    $('popCard').scrollTop = 0;
+    $('popCard').focus({ preventScroll: true });
+  } else if (was && POP_FOCUS && POP_FOCUS.focus && document.body.contains(POP_FOCUS)) {
+    try { POP_FOCUS.focus({ preventScroll: true }); } catch (e) { /* 무시 */ }
+  }
+}
+function setPopHead(i, stage) {
+  var sc = SCENES[i], av = $('popAv');
+  $('popStage').textContent = stage;
+  $('simArea').textContent = sc.area + ' · ' + sc.date;
+  $('popTitle').textContent = sc.place;
+  av.hidden = false; av.onerror = function () { av.hidden = true; };
+  av.src = 'img/avatar_' + S.avatar + '.png';
+}
+function trapTab(e) { // 팝업 안에서만 Tab 이동
+  if (e.key !== 'Tab' || $('pop').hidden) return;
+  var f = Array.prototype.filter.call($('popCard').querySelectorAll('button,[href],input,select,textarea,summary,[tabindex]:not([tabindex="-1"])'),
+    function (el) { return !el.disabled && el.offsetParent !== null; });
+  if (!f.length) { e.preventDefault(); return; }
+  var first = f[0], last = f[f.length - 1], cur = document.activeElement;
+  if (e.shiftKey && (cur === first || cur === $('popCard'))) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && cur === last) { e.preventDefault(); first.focus(); }
+}
 function visitedNodes() { return S.order.map(nodeOfScene); }
 
 function nodeStates() {
@@ -178,20 +212,24 @@ function goFront(i) {
 function openScene(i) {
   var sc = SCENES[i]; S.phase = 'scene'; S.cur = i;
   $('simDate').textContent = sc.date;
-  $('simArea').textContent = sc.area; $('simPlace').textContent = sc.place;
+  setPopHead(i, '선택의 순간');
   $('simSit').textContent = sc.situation;
   var note = $('simNote'); note.hidden = !sc.note; note.textContent = sc.note || '';
-  var box = $('choices'); box.innerHTML = '';
+  var box = $('choices'); box.innerHTML = ''; box.className = 'choices';
   sc.choices.forEach(function (c, k) {
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'choice';
     var lt = document.createElement('span'); lt.className = 'lt'; lt.textContent = LETTERS[k] + '.';
     b.appendChild(lt); b.appendChild(document.createTextNode(c.t));
-    b.addEventListener('click', function () { pick(k); });
+    b.addEventListener('click', function () {
+      if (S.phase !== 'scene' || box.classList.contains('locked')) return;
+      box.classList.add('locked'); b.classList.add('picked'); // 고른 카드를 잠깐 눌러 보여 준 뒤 결과로 넘어간다
+      setTimeout(function () { pick(k); }, 360);
+    });
     box.appendChild(b);
   });
   panel('pScene'); refreshMap();
-  $('pScene').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (window.innerWidth < 900) { var mw = document.querySelector('.mapwrap'); if (mw) window.scrollTo({ top: Math.max(0, mw.getBoundingClientRect().top + window.pageYOffset - 8), behavior: 'auto' }); }
 }
 function pick(k) {
   if (S.phase !== 'scene') return;
@@ -222,7 +260,9 @@ function renderRoll(i, before) { // 이번 선택으로 수치가 어떻게 바�
 }
 function fillFeedback(i) {
   var sc = SCENES[i];
-  $('fbPick').textContent = '내 선택 — ' + LETTERS[S.picks[i]] + '. ' + sc.choices[S.picks[i]].t;
+  setPopHead(i, S.phase === 'review' ? '다시 보기' : '그 뒤에 벌어진 일');
+  $('fbLetter').textContent = LETTERS[S.picks[i]];
+  $('fbPick').textContent = sc.choices[S.picks[i]].t;
   $('fbReal').textContent = sc.history;
   var bk = $('fbBook'); bk.hidden = !sc.book;
   if (sc.book) bk.textContent = '교과서 ' + sc.book.page + '쪽 ' + sc.book.note + ': ' + sc.book.quote;
@@ -236,7 +276,6 @@ function showFeedback() {
   var last = (S.turn === TURNS.length - 1);
   $('btnNext').textContent = left ? '이번 시기의 다른 현장으로' : (last ? '결과 보기' : '다음 시기로');
   panel('after'); refreshMap();
-  $('after').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 function showReview(i) {
   S.phase = 'review'; S.reviewFrom = S.cur;
@@ -280,7 +319,7 @@ function showEnd() {
   $('endMatch').textContent = '실제 역사와 같은 선택을 한 장면: ' + sameCount() + ' / ' + SCENES.length;
   choiceLines($('endList'));
   fillSceneSelect($('selDiary'), true);
-  $('diaryFact').hidden = true; $('txtDiary').value = ''; $('resErr').textContent = '';
+  $('diaryFact').hidden = true; $('diaryEx').hidden = true; $('txtDiary').value = ''; $('resErr').textContent = '';
   var btnS = $('btnSubmit'); btnS.disabled = false; btnS.textContent = '제출하기';
   $('diaryIntro').textContent = '내가 고른 인물인 ‘' + avatarName() + '’의 눈으로, 시뮬레이션에서 지나온 장면 하나를 일기로 남겨 보자.';
   show('vEnd');
@@ -294,11 +333,35 @@ function showEnd() {
 function avatarName() { var av = AVATARS.filter(function (x) { return x.key === S.avatar; })[0]; return av ? av.name : '인물'; }
 function showDiaryFact() {
   var v = $('selDiary').value, box = $('diaryFact');
-  if (v === '') { box.hidden = true; return; }
+  if (v === '') { box.hidden = true; $('diaryEx').hidden = true; return; }
   var i = +v, sc = SCENES[i];
   $('diaryMine').textContent = '내가 고른 선택 — ' + LETTERS[S.picks[i]] + '. ' + sc.choices[S.picks[i]].t;
   $('diaryReal').textContent = sc.date + ' · ' + sc.place + ' — ' + sc.history;
   box.hidden = false;
+  showDiaryExamples(i);
+}
+function fillBlanks(el, text) { // '…' 자리는 빈칸 표시로 감싼다
+  el.textContent = '';
+  text.split('…').forEach(function (part, k) {
+    if (k) { var b = document.createElement('span'); b.className = 'blank'; b.textContent = '…'; el.appendChild(b); }
+    if (part) el.appendChild(document.createTextNode(part));
+  });
+}
+function showDiaryExamples(i) {
+  var sc = SCENES[i], pick = sc.choices[S.picks[i]].t;
+  var map = { date: sc.date, place: sc.place, pick: pick };
+  var frames = DIARY_FRAMES.concat([DIARY_PERSONA[S.avatar]]).filter(Boolean);
+  frames.splice(1, 0, frames.pop()); // 인물 처지 문장을 둘째 칸에 둔다
+  var list = $('dxList'); list.innerHTML = '';
+  frames.forEach(function (f) {
+    var li = document.createElement('li');
+    fillBlanks(li, f.replace(/\{(\w+)\}/g, function (m, k) { return map[k] || m; }));
+    list.appendChild(li);
+  });
+  var smp = $('dxSample'), has = i === DIARY_SAMPLE.scene;
+  smp.hidden = !has; smp.open = false;
+  if (has) { $('dxSampleHead').textContent = DIARY_SAMPLE.head; $('dxSampleText').textContent = DIARY_SAMPLE.text; }
+  $('diaryEx').hidden = false;
 }
 function sentenceCount(t) {
   return t.split(/[.!?。\n]+/).filter(function (x) { return x.trim().length >= 4; }).length;
@@ -380,12 +443,12 @@ function init() {
   $('previewBar').hidden = !S.preview;
   $('inSid').value = q.get('sid') || (S.preview ? '30512' : '');
   $('inName').value = q.get('name') || (S.preview ? '미리보기' : '');
-  $('hintDiary').textContent = HINTS.diary;
   renderBg();
   $('btnLogin').addEventListener('click', login);
   $('btnStart').addEventListener('click', startSim);
   $('btnAvatar').addEventListener('click', function () { show('vIntro'); });
   $('btnNext').addEventListener('click', nextStep);
+  document.addEventListener('keydown', trapTab);
   window.addEventListener('resize', function () { if (MV && !$('vSim').hidden) MV.resize(); if (MVEND && !$('vEnd').hidden) MVEND.resize(); });
   $('selDiary').addEventListener('change', showDiaryFact);
   $('btnSubmit').addEventListener('click', submit);
