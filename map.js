@@ -134,6 +134,54 @@ var MapView = (function () {
     return (im && im.__ok && im.naturalWidth > 0) ? im : null;
   }
 
+  /* 촘촘한 PNG(제미나이 도트)를 지도 격자에 맞춰 다시 찍는다. 칸마다 가장 많이 쓰인 색 하나만 남기고(어두운 윤곽선은 40% 이상이면 살려서),
+   * 코드로 찍은 다른 그림과 같은 굵기의 도트로 만든다. 결과는 지도 격자(GW x GH) 위에 그대로 올린다. */
+  var gridCache = {};
+  function gridSprite(im, cw, ch) {
+    var ck = im.src + '|' + cw + 'x' + ch;
+    if (gridCache[ck]) return gridCache[ck];
+    var soft = /_done/.test(im.src); // 불탄 그림처럼 어두운 그림은 칸 평균색으로 부드럽게
+    var W = im.naturalWidth, H = im.naturalHeight, s = document.createElement('canvas');
+    s.width = W; s.height = H;
+    var sc = s.getContext('2d'); sc.drawImage(im, 0, 0);
+    var d = sc.getImageData(0, 0, W, H).data;
+    var cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+    var c = cv.getContext('2d'), x, y, xx, yy;
+    for (y = 0; y < ch; y++) for (x = 0; x < cw; x++) {
+      var x0 = Math.floor(x * W / cw), x1 = Math.max(x0 + 1, Math.floor((x + 1) * W / cw));
+      var y0 = Math.floor(y * H / ch), y1 = Math.max(y0 + 1, Math.floor((y + 1) * H / ch));
+      var tot = 0, op = 0, dk = 0, dr = 0, dg = 0, db = 0, cnt = {};
+      for (yy = y0; yy < y1; yy++) for (xx = x0; xx < x1; xx++) {
+        var i = (yy * W + xx) * 4; tot++;
+        if (d[i + 3] < 128) continue;
+        op++;
+        var r = d[i], g = d[i + 1], b = d[i + 2];
+        if (r * .3 + g * .59 + b * .11 < 70) { dk++; dr += r; dg += g; db += b; }
+        var key = (r >> 4) * 256 + (g >> 4) * 16 + (b >> 4), e = cnt[key] || (cnt[key] = [0, 0, 0, 0]);
+        e[0]++; e[1] += r; e[2] += g; e[3] += b;
+      }
+      if (op * 2 < tot) continue;
+      if (!soft && dk >= op * .4 && dk < op * .85) { c.fillStyle = 'rgb(' + Math.round(dr / dk) + ',' + Math.round(dg / dk) + ',' + Math.round(db / dk) + ')'; }
+      else if (soft || dk >= op * .85) { // 거의 다 어두운 칸(불탄 그림 등)은 평균색으로 부드럽게
+        var sr = 0, sg = 0, sb = 0, sn = 0; Object.keys(cnt).forEach(function (k) { sn += cnt[k][0]; sr += cnt[k][1]; sg += cnt[k][2]; sb += cnt[k][3]; });
+        c.fillStyle = 'rgb(' + Math.round(sr / sn) + ',' + Math.round(sg / sn) + ',' + Math.round(sb / sn) + ')';
+      } else {
+        var best = null; Object.keys(cnt).forEach(function (k) { if (!best || cnt[k][0] > best[0]) best = cnt[k]; });
+        c.fillStyle = 'rgb(' + Math.round(best[1] / best[0]) + ',' + Math.round(best[2] / best[0]) + ',' + Math.round(best[3] / best[0]) + ')';
+      }
+      c.fillRect(x, y, 1, 1);
+    }
+    return (gridCache[ck] = cv);
+  }
+  var SUB = (typeof window !== 'undefined' && window.MAP_SUB) || 2; // 1: 지도 격자와 같은 굵기, 2: 절반 칸(2배 촘촘)으로 찍기
+  function heroLeft() { // 가까운 거점의 이름표가 오른쪽이면 말은 왼쪽에 세운다(이름표 가림 방지)
+    var best = null, bd = 6;
+    Object.keys(NODE_POS).forEach(function (k) { var p = { x: ux(NODE_POS[k].x), y: uy(NODE_POS[k].y) }, d = Math.hypot(p.x - tokRef.x, p.y - tokRef.y); if (d < bd) { bd = d; best = k; } });
+    return !!best && NODE_POS[best].side === 'right';
+  }
+  var tokRef = { x: 0, y: 0 };
+  var HERO_CELL = 0.29; // 아바타 PNG 한 픽셀이 지도 몇 칸인지(30x64 → 약 9x19칸)
+
   var sprCache = {};
   function spriteCanvas(name, outline, ocol) {
     var ck = name + (outline ? 'o' : '') + (ocol || '');
@@ -364,7 +412,7 @@ var MapView = (function () {
         for (var t = 0; t <= d; t += 3) { lc.fillRect(Math.round(a.x + (b.x - a.x) * t / d), Math.round(a.y + (b.y - a.y) * t / d), 2, 2); }
       }
       // 거점 (그림자 → 그림 → 표시)
-      var pngNodes = [];
+      var fine = [];
       Object.keys(NODE_POS).forEach(function (k) {
         var st = nodeState[k] || 'locked', q = pos(k);
         var spr = (st === 'locked') ? spriteCanvas('fog', true, '#8d97a8') : spriteCanvas(ICON[k], true);
@@ -380,7 +428,9 @@ var MapView = (function () {
           lc.fillRect(x - 2, y - 2, spr.width + 4, 1); lc.fillRect(x - 2, y + spr.height + 1, spr.width + 4, 1);
           lc.fillRect(x - 2, y - 2, 1, spr.height + 4); lc.fillRect(x + spr.width + 1, y - 2, 1, spr.height + 4);
         }
-        if (png) pngNodes.push([png, x, y, spr.width, spr.height]); else lc.drawImage(spr, x, y);
+        if (png && SUB === 1) lc.drawImage(gridSprite(png, spr.width, spr.height), x, y);
+        else if (png) fine.push([gridSprite(png, spr.width * SUB, spr.height * SUB), x, y, spr.width, spr.height, false]);
+        else lc.drawImage(spr, x, y);
         if (st === 'open') {
           var ar = spriteCanvas('arrow', true), ay = y - ar.height - 2 - (((frame >> 1) % 4 < 2) ? 0 : 2);
           lc.drawImage(ar, Math.round(q.x - ar.width / 2), ay);
@@ -396,37 +446,40 @@ var MapView = (function () {
         var hero = heroCanvas(avatarKey, tok.moving && (frame % 2) ? 1 : 0);
         var hx = (tok.x + 9 + hero.width / 2 > GW) ? tok.x - 9 - hero.width / 2 : tok.x + 9 - hero.width / 2;
         lc.drawImage(hero, Math.round(hx), Math.round(tok.y - hero.height + 9));
+      } else if (pngHero) {
+        var hw = Math.max(1, Math.round(pngHero.naturalWidth * HERO_CELL)), hh = Math.max(1, Math.round(pngHero.naturalHeight * HERO_CELL));
+        tokRef = tok;
+        var toLeft = heroLeft() || (tok.x + 9 + hw / 2 > GW);
+        var hx2 = Math.round(toLeft ? tok.x - 9 - hw / 2 : tok.x + 9 - hw / 2);
+        var hy2 = Math.round(tok.y - hh + 9) - (tok.moving && (frame % 2) ? 1 : 0);
+        var flip = tok.moving && tok.dir < 0;
+        if (SUB === 1) {
+          var hs = gridSprite(pngHero, hw, hh);
+          if (flip) { lc.save(); lc.translate(hx2 + hw, hy2); lc.scale(-1, 1); lc.drawImage(hs, 0, 0); lc.restore(); }
+          else lc.drawImage(hs, hx2, hy2);
+        } else fine.push([gridSprite(pngHero, hw * SUB, hh * SUB), hx2, hy2, hw, hh, flip]);
       }
       dc.imageSmoothingEnabled = false;
       dc.drawImage(lo, 0, 0, cv.width, cv.height);
-      pngNodes.forEach(function (n) { // 손으로 찍은 거점 그림
-        var tw = n[3] * scale, th = n[4] * scale;
-        dc.imageSmoothingEnabled = n[0].naturalWidth > tw; dc.imageSmoothingQuality = 'high';
-        dc.drawImage(n[0], Math.round(n[1] * scale), Math.round(n[2] * scale), tw, th);
-        dc.imageSmoothingEnabled = false;
+      fine.forEach(function (f) { // 절반 칸 도트: 칸 경계에 맞춰 정수 배로 찍는다
+        var X = f[1] * scale, Y = f[2] * scale, Wd = f[3] * scale, Hd = f[4] * scale;
+        if (f[5]) { dc.save(); dc.translate(X + Wd, Y); dc.scale(-1, 1); dc.drawImage(f[0], 0, 0, Wd, Hd); dc.restore(); }
+        else dc.drawImage(f[0], X, Y, Wd, Hd);
       });
-      if (pngHero) {
-        var k = scale / 4, sw = pngHero.naturalWidth * k, sh = pngHero.naturalHeight * k;
-        var px = tok.x * scale, py = tok.y * scale;
-        var x = px + 9 * scale - sw / 2;
-        if (x + sw > cv.width) x = px - 9 * scale - sw / 2;
-        var y = py + 9 * scale - sh - (tok.moving && (frame % 2) ? scale : 0);
-        dc.imageSmoothingEnabled = (scale % 4 !== 0);
-        if (tok.moving && tok.dir < 0) { dc.save(); dc.translate(Math.round(x + sw), Math.round(y)); dc.scale(-1, 1); dc.drawImage(pngHero, 0, 0, sw, sh); dc.restore(); }
-        else dc.drawImage(pngHero, Math.round(x), Math.round(y), sw, sh);
-        dc.imageSmoothingEnabled = false;
-      }
     }
 
     function loop() { frame++; draw(); }
     function startLoop() { if (!reduced && !timer) timer = setInterval(loop, 125); }
 
     mv.resize = function () {
-      var w = (wrap.parentNode && wrap.parentNode.clientWidth) || 0;
+      var dpr = window.devicePixelRatio || 1;
+      var w = ((wrap.parentNode && wrap.parentNode.clientWidth) || 0) - 6; // 테두리 3px x 2
       if (w < GW * 3) w = GW * 3;
-      scale = Math.max(3, Math.min(cfg.maxScale || 4, Math.floor(w / GW)));
+      // 기기 픽셀 기준 정수 배율: 화면 배율(DPR)이 2.625 같은 폰에서도 도트가 모두 같은 굵기로 찍힌다
+      scale = Math.max(3, Math.min((cfg.maxScale || 6) * dpr, Math.floor(w * dpr / GW)));
+      if (SUB > 1) scale = Math.max(2 * SUB, scale - (scale % SUB));
       cv.width = GW * scale; cv.height = GH * scale;
-      cv.style.width = (GW * scale) + 'px'; cv.style.height = (GH * scale) + 'px';
+      cv.style.width = (GW * scale / dpr) + 'px'; cv.style.height = (GH * scale / dpr) + 'px';
       ov.style.width = cv.style.width; ov.style.height = cv.style.height;
       draw();
     };

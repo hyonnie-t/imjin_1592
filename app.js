@@ -59,6 +59,10 @@ function openAvatar() {
     b.setAttribute('aria-checked', a.key === S.avatar ? 'true' : 'false');
     var pic = document.createElement('img');
     pic.src = 'img/avatar_' + a.key + '.png'; pic.alt = ''; pic.className = 'avatar-pic';
+    pic.onload = function () { // 원본 도트의 정수배(기기 픽셀 기준)로 보여 줘서 도트 굵기를 고르게 한다
+      var dpr = window.devicePixelRatio || 1, k = Math.max(1, Math.floor(2 * dpr)) / dpr;
+      pic.style.width = (pic.naturalWidth * k) + 'px'; pic.style.height = (pic.naturalHeight * k) + 'px'; pic.style.padding = '4px';
+    };
     pic.onerror = function () { // 이미지가 없으면 코드로 찍은 도트로 대신한다
       var src = MapView.heroCanvas(a.key, 0), cv = document.createElement('canvas');
       cv.width = src.width * 8; cv.height = src.height * 8; cv.className = 'avatar-pic';
