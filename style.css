@@ -103,9 +103,17 @@ details.hint summary{cursor:pointer;min-height:var(--tap);display:flex;align-ite
 /* 보드 */
 .board-card{padding:14px}
 .board{display:grid;gap:14px}
-@media(min-width:900px){main{max-width:1060px}.board{grid-template-columns:540px 1fr;align-items:start}.mapcol{position:sticky;top:8px}}
-.mapwrap{position:relative;margin:0 auto;width:max-content;max-width:100%;line-height:0}
-#mapCv,#endCv{display:block;image-rendering:pixelated;image-rendering:crisp-edges;border:3px solid #5b4630;border-radius:4px;background:#4685b0}
+@media(min-width:900px){main{max-width:1180px}.board{grid-template-columns:minmax(400px,640px) minmax(380px,1fr);align-items:start}.mapcol{position:sticky;top:8px}}
+/* 지도 칸: 너비를 다 쓰고, 캔버스는 가운데(크기는 map.js가 기기 픽셀 정수배로 정한다) */
+.mapwrap{position:relative;margin:0 auto;line-height:0}
+#mapCv,#endCv{display:block;box-sizing:content-box;margin:0 auto;image-rendering:pixelated;image-rendering:crisp-edges;border:3px solid #5b4630;border-radius:4px;background:#4685b0}
+/* 폰: 지도를 화면 끝까지 넓게(카드 안쪽 여백·바깥 여백만큼 밖으로) */
+@media(max-width:599px){
+  .board-card{padding:12px}
+  .board-card .mapwrap{margin:0 -29px}
+  .card .endmap{margin:8px -37px 16px}
+  #mapCv,#endCv{border-width:3px 0;border-radius:0}
+}
 .mapov{position:absolute;left:0;top:0;pointer-events:none;line-height:1.3}
 .mapov .node{position:absolute;transform:translate(-50%,-50%);width:48px;height:48px;padding:0;border:0;background:transparent;cursor:pointer;pointer-events:auto;font:inherit}
 .mapov .node.locked{cursor:default}
