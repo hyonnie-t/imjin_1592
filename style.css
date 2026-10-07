@@ -145,10 +145,6 @@ details.hint summary{cursor:pointer;min-height:var(--tap);display:flex;align-ite
 .node[data-side="top"] .nbadge{top:auto;bottom:-6px}
 .node[data-side="right"] .nbadge{right:auto;left:-4px}
 
-.checks{list-style:none;margin:8px 0 12px;padding:0}
-.checks li{margin:2px 0}
-.checks label{display:flex;gap:10px;align-items:flex-start;min-height:var(--tap);padding:6px 0;font-weight:400}
-.checks input{width:22px;height:22px;margin-top:3px;flex:none}
 
 /* ── 팝업(장면·결과) ── 지도 위에 얹는 카드. 좁은 화면은 아래에서 올라오는 시트, 900px 이상은 가운데 카드 */
 :root{--wood:#5b4630;--parch:#fffaf0;--parch2:#f7ecd2;--gold:#e3b95a;--serif:'Noto Serif KR','Nanum Myeongjo','Batang',serif}
@@ -223,7 +219,13 @@ body.modal-open{overflow:hidden}
 .dx-h{margin:0;font-family:var(--serif);font-weight:800;font-size:1.1rem}
 .dx-sub{margin:2px 0 8px}
 .dx-list{margin:0;padding:0;list-style:none;counter-reset:dx}
-.dx-list li{position:relative;counter-increment:dx;margin:0 0 8px;padding:8px 12px 8px 44px;background:#fff;border:1px solid var(--line);border-radius:10px;line-height:1.7}
+.dx-list li{position:relative;counter-increment:dx;margin:0 0 8px;padding:0;background:#fff;border:1px solid var(--line);border-radius:10px;line-height:1.7}
+.dx-btn{display:block;width:100%;min-height:var(--tap);margin:0;padding:8px 12px 8px 44px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;line-height:1.7;text-align:left;cursor:pointer}
+.dx-btn:hover{background:var(--parch)}
+.dx-btn:active{background:var(--parch2)}
+.dx-btn:focus-visible{outline:3px solid var(--indigo);outline-offset:1px}
+.dx-list li.used{border-color:var(--indigo)}
+.dx-list li.used .dx-btn::after{content:' ✓ 넣었어';color:var(--indigo);font-weight:800;font-size:.9rem;white-space:nowrap}
 .dx-list li::before{content:counter(dx);position:absolute;left:10px;top:9px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--indigo);color:#fff;font-weight:800;font-size:1rem}
 .blank{display:inline-block;min-width:2.6em;margin:0 2px;text-align:center;color:var(--seal);font-weight:800;border-bottom:2px dashed var(--seal);line-height:1.2}
 .diaryex details.hint{background:#fff}

@@ -351,6 +351,18 @@ function fillBlanks(el, text) { // '…' 자리는 빈칸 표시로 감싼다
     if (part) el.appendChild(document.createTextNode(part));
   });
 }
+function insertSentence(s) { // 눌러 고른 문장을 일기칸 맨 끝에 넣고, 첫 '…'을 선택해 바로 덮어쓰게 한다
+  var ta = $('txtDiary'), before = ta.value;
+  if (before && !/\s$/.test(before)) before += ' ';
+  var start = before.length;
+  ta.value = before + s;
+  ta.dispatchEvent(new Event('input', { bubbles: true })); // 임시저장 연동
+  ta.focus();
+  var k = s.indexOf('…');
+  if (k >= 0) ta.setSelectionRange(start + k, start + k + 1);
+  else ta.setSelectionRange(ta.value.length, ta.value.length);
+  $('resErr').textContent = '';
+}
 function showDiaryExamples(i) {
   var sc = SCENES[i], pick = sc.choices[S.picks[i]].t;
   var map = { date: sc.date, place: sc.place, pick: pick };
@@ -358,8 +370,13 @@ function showDiaryExamples(i) {
   frames.splice(1, 0, frames.pop()); // 인물 처지 문장을 둘째 칸에 둔다
   var list = $('dxList'); list.innerHTML = '';
   frames.forEach(function (f) {
-    var li = document.createElement('li');
-    fillBlanks(li, f.replace(/\{(\w+)\}/g, function (m, k) { return map[k] || m; }));
+    var li = document.createElement('li'), btn = document.createElement('button');
+    var sentence = f.replace(/\{(\w+)\}/g, function (m, k) { return map[k] || m; });
+    btn.type = 'button'; btn.className = 'dx-btn';
+    btn.setAttribute('aria-label', '일기칸에 넣기: ' + sentence);
+    fillBlanks(btn, sentence);
+    btn.addEventListener('click', function () { insertSentence(sentence); li.className = 'used'; });
+    li.appendChild(btn);
     list.appendChild(li);
   });
   var smp = $('dxSample'), has = i === DIARY_SAMPLE.scene;
@@ -381,6 +398,7 @@ function submit() {
   var si = $('selDiary').value, text = $('txtDiary').value.trim();
   if (si === '') { err.textContent = '일기로 남길 장면을 먼저 골라 줘.'; return; }
   if (sentenceCount(text) < 3) { err.textContent = '일기를 3문장 이상 써 줘.'; return; }
+  if (text.indexOf('…') >= 0) { err.textContent = '일기에 …이 남아 있어. 내 말로 바꿔 써 줘.'; return; }
   err.textContent = '';
   var n = +si;
   var detail = {
