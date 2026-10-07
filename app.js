@@ -134,6 +134,7 @@ function startSim() {
   S.turn = 0; S.picks = []; S.order = []; S.dice = []; S.phase = 'turn'; S.cur = -1;
   S.stats = { s: CONFIG.START, m: CONFIG.START, g: CONFIG.START };
   if (!S.guardOn) { FocusGuard.start({ key: CONFIG.GAME_NAME + ':' + S.sid }); S.guardOn = true; }
+  if (window.DraftGuard) DraftGuard.start({ key: CONFIG.GAME_NAME, sid: S.sid }); // 글쓰기 칸 임시저장 (history26 v75)
   Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (el) { el.removeAttribute('data-prev'); });
   renderStats();
   show('vSim');
@@ -280,7 +281,10 @@ function showEnd() {
   $('endMatch').textContent = '실제 역사와 같은 선택을 한 장면: ' + sameCount() + ' / ' + SCENES.length;
   choiceLines($('endList'));
   fillSceneSelect($('selDiary'), true);
-  $('diaryFact').hidden = true; $('txtDiary').value = ''; $('resErr').textContent = '';
+  $('diaryFact').hidden = true; $('resErr').textContent = '';
+  // 이 페이지에서 처음 들어올 땐 임시저장에서 복원된 일기를 지우지 않는다(새로고침 뒤 다시 도착한 경우). 다시 하기 때만 비운다.
+  if (S.endShown) $('txtDiary').value = '';
+  S.endShown = true;
   var btnS = $('btnSubmit'); btnS.disabled = false; btnS.textContent = '제출하기';
   $('diaryIntro').textContent = '내가 고른 인물인 ‘' + avatarName() + '’의 눈으로, 시뮬레이션에서 지나온 장면 하나를 일기로 남겨 보자.';
   show('vEnd');
@@ -353,6 +357,7 @@ function submit() {
 }
 function finishSubmit() {
   S.submitted = true;
+  if (window.DraftGuard) DraftGuard.clear(); // 제출 성공 → 임시저장 삭제
   $('doneMsg').textContent = S.preview ? '미리보기라서 실제로 저장되지는 않았어.' : '내 기록이 저장됐어.';
   var p = parseSid(S.sid);
   var link = p && p.grade === 3 ? CONFIG.PADLET_BY_BAN[p.ban] : '';
