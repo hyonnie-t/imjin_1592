@@ -31,13 +31,22 @@ function parseSid(sid) {
 function sceneLabel(i) { return '장면 ' + (i + 1) + ' — ' + SCENES[i].place; }
 
 /* ── 자원 표시 ── */
-function renderStats() {
+function renderStats(animate) {
   Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (el) {
-    var v = S.stats[el.getAttribute('data-k')];
-    var pips = '';
-    for (var i = 0; i < CONFIG.MAX; i++) pips += '<span class="pip' + (i < v ? ' on' : '') + '"></span>';
-    el.querySelector('.pips').innerHTML = pips;
-    el.querySelector('.stat-num').textContent = v;
+    var k = el.getAttribute('data-k'), v = S.stats[k], prev = el.getAttribute('data-prev');
+    var segs = '';
+    for (var i = 0; i < CONFIG.MAX; i++) segs += '<span class="seg' + (i < v ? ' on' : '') + '"></span>';
+    el.querySelector('.segs').innerHTML = segs;
+    el.querySelector('.stat-num').textContent = v + '/' + CONFIG.MAX;
+    el.classList.toggle('low', v <= 1);
+    el.setAttribute('data-prev', v);
+    var d = (animate && prev !== null) ? v - Number(prev) : 0;
+    if (d) {
+      var tag = document.createElement('span'); tag.className = 'delta ' + (d > 0 ? 'up' : 'down');
+      tag.textContent = (d > 0 ? '+' : '−') + Math.abs(d);
+      el.appendChild(tag); setTimeout(function () { if (tag.parentNode) tag.parentNode.removeChild(tag); }, 1600);
+      el.classList.remove('flash-up', 'flash-down'); void el.offsetWidth; el.classList.add(d > 0 ? 'flash-up' : 'flash-down');
+    }
   });
 }
 
@@ -106,7 +115,7 @@ function renderBg() {
 var MV = null, MVEND = null;
 function sceneByNode(node) { for (var i = 0; i < SCENES.length; i++) if (SCENES[i].node === node) return i; return -1; }
 function nodeOfScene(i) { return SCENES[i].node; }
-function panel(id) { ['pTurn', 'pScene', 'pDice', 'after'].forEach(function (p) { $(p).hidden = (p !== id); }); }
+function panel(id) { ['pTurn', 'pScene', 'after'].forEach(function (p) { $(p).hidden = (p !== id); }); }
 function visitedNodes() { return S.order.map(nodeOfScene); }
 
 function nodeStates() {
@@ -125,6 +134,7 @@ function startSim() {
   S.turn = 0; S.picks = []; S.order = []; S.dice = []; S.phase = 'turn'; S.cur = -1;
   S.stats = { s: CONFIG.START, m: CONFIG.START, g: CONFIG.START };
   if (!S.guardOn) { FocusGuard.start({ key: CONFIG.GAME_NAME + ':' + S.sid }); S.guardOn = true; }
+  Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (el) { el.removeAttribute('data-prev'); });
   renderStats();
   show('vSim');
   if (!MV) MV = MapView.create({ canvas: $('mapCv'), overlay: $('mapOv'), onNode: onNode });
@@ -153,7 +163,7 @@ function renderTurn() {
   panel('pTurn'); refreshMap();
 }
 function onNode(node, state) {
-  if (S.phase === 'moving' || S.phase === 'dice') return;
+  if (S.phase === 'moving') return;
   var i = sceneByNode(node);
   if (state === 'open' && S.phase === 'turn') goFront(i);
   else if (state === 'done' && (S.phase === 'turn' || S.phase === 'review')) showReview(i);
@@ -183,43 +193,32 @@ function openScene(i) {
   panel('pScene'); refreshMap();
   $('pScene').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
-function diceFace(n) {
-  var map = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
-  var f = $('diceFace'); f.innerHTML = '';
-  for (var c = 0; c < 9; c++) { var d = document.createElement('i'); if (!n || map[n].indexOf(c) === -1) d.style.visibility = 'hidden'; f.appendChild(d); }
-}
 function pick(k) {
   if (S.phase !== 'scene') return;
-  S.phase = 'dice'; S.pendingPick = k;
-  Array.prototype.forEach.call($('choices').children, function (b, j) { b.disabled = true; b.className = 'choice ' + (j === k ? 'picked' : 'dim'); });
-  diceFace(0); $('diceMsg').textContent = '';
-  $('btnRoll').hidden = false; $('btnRoll').disabled = false; $('btnAfterDice').hidden = true;
-  panel('pDice');
-  $('pDice').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-function rollDice() {
-  var btn = $('btnRoll'); btn.disabled = true;
-  var box = $('dice'), n = 0, ticks = 0, total = reducedMotion() ? 1 : 10;
-  box.classList.add('rolling');
-  (function tick() {
-    n = 1 + Math.floor(Math.random() * 6); diceFace(n); ticks++;
-    if (ticks < total) { setTimeout(tick, 80); return; }
-    box.classList.remove('rolling');
-    applyDice(n);
-  })();
-}
-function reducedMotion() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
-function applyDice(n) {
-  var i = S.cur, k = S.pendingPick, c = SCENES[i].choices[k], e = diceEffect(n);
+  var i = S.cur, c = SCENES[i].choices[k];
+  var n = 1 + Math.floor(Math.random() * 6), e = diceEffect(n); // 게임용 무작위: 실제 역사 결과는 바뀌지 않는다
   var before = { s: S.stats.s, m: S.stats.m, g: S.stats.g };
   S.stats[c.up] = clamp(S.stats[c.up] + e.up);
   S.stats[c.down] = clamp(S.stats[c.down] - e.down);
-  renderStats();
   S.picks[i] = k; S.order.push(i);
   S.dice[i] = { n: n, up: c.up, down: c.down, gain: S.stats[c.up] - before[c.up], loss: before[c.down] - S.stats[c.down] };
-  $('diceMsg').textContent = '주사위 ' + n + ' — ' + RES_LABEL[c.up] + ' +' + e.up + ', ' + RES_LABEL[c.down] + ' −' + e.down;
-  $('btnRoll').hidden = true; $('btnAfterDice').hidden = false;
-  S.phase = 'afterDice';
+  renderStats(true);
+  renderRoll(i, before);
+  showFeedback();
+}
+function renderRoll(i, before) { // 이번 선택으로 수치가 어떻게 바뀌었는지 (헤더가 화면 밖이어도 보이도록 결과 칸에 다시 보여 준다)
+  var d = S.dice[i], box = $('rollBox'); box.innerHTML = '';
+  [['up', d.up], ['down', d.down]].forEach(function (p) {
+    var key = p[1], now = S.stats[key], was = before[key], diff = now - was;
+    var row = document.createElement('div'); row.className = 'roll-row ' + (p[0] === 'up' ? 'up' : 'down');
+    var segs = ''; for (var j = 0; j < CONFIG.MAX; j++) segs += '<span class="seg' + (j < now ? ' on' : '') + (j >= Math.min(now, was) && j < Math.max(now, was) ? ' chg' : '') + '"></span>';
+    var amt = diff === 0 ? '변화 없음(한계)' : ((diff > 0 ? '+' : '−') + Math.abs(diff));
+    row.innerHTML = '<span class="rr-name">' + RES_LABEL[key] + '</span><span class="segs">' + segs + '</span><b class="rr-amt">' + amt + '</b>';
+    box.appendChild(row);
+  });
+  var luck = document.createElement('p'); luck.className = 'roll-note';
+  luck.textContent = '🎲 ' + d.n + ' · 눈이 높을수록 이득이 커. 게임용 수치라 실제 역사는 바뀌지 않아.';
+  box.appendChild(luck);
 }
 function fillFeedback(i) {
   var sc = SCENES[i];
@@ -242,6 +241,8 @@ function showFeedback() {
 function showReview(i) {
   S.phase = 'review'; S.reviewFrom = S.cur;
   fillFeedback(i);
+  var d = S.dice[i], rb = $('rollBox'); rb.innerHTML = '';
+  if (d) { var p = document.createElement('p'); p.className = 'roll-note'; p.textContent = '그때 결과 — ' + RES_LABEL[d.up] + ' +' + d.gain + ', ' + RES_LABEL[d.down] + ' −' + d.loss; rb.appendChild(p); }
   $('btnNext').textContent = '돌아가기';
   panel('after');
 }
@@ -401,8 +402,6 @@ function init() {
   $('btnStart').addEventListener('click', startSim);
   $('btnAvatar').addEventListener('click', function () { show('vIntro'); });
   $('btnNext').addEventListener('click', nextStep);
-  $('btnRoll').addEventListener('click', rollDice);
-  $('btnAfterDice').addEventListener('click', showFeedback);
   window.addEventListener('resize', function () { if (MV && !$('vSim').hidden) MV.resize(); if (MVEND && !$('vEnd').hidden) MVEND.resize(); });
   $('btnToResult').addEventListener('click', toResult);
   $('btnEffect').addEventListener('click', showEffect);

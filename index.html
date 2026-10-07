@@ -14,9 +14,9 @@
       <h1>7년 전쟁, 여러 현장에서 동시에 벌어지다</h1>
     </div>
     <div id="stats" class="stats" hidden aria-label="가상 자원">
-      <div class="stat" data-k="s"><span class="stat-name">군량</span><span class="pips" aria-hidden="true"></span><span class="stat-num"></span></div>
-      <div class="stat" data-k="m"><span class="stat-name">민심</span><span class="pips" aria-hidden="true"></span><span class="stat-num"></span></div>
-      <div class="stat" data-k="g"><span class="stat-name">명과의 관계</span><span class="pips" aria-hidden="true"></span><span class="stat-num"></span></div>
+      <div class="stat" data-k="s"><div class="stat-head"><span class="stat-ico" aria-hidden="true">🌾</span><span class="stat-name">군량</span><span class="stat-num"></span></div><div class="segs" aria-hidden="true"></div></div>
+      <div class="stat" data-k="m"><div class="stat-head"><span class="stat-ico" aria-hidden="true">🏘️</span><span class="stat-name">민심</span><span class="stat-num"></span></div><div class="segs" aria-hidden="true"></div></div>
+      <div class="stat" data-k="g"><div class="stat-head"><span class="stat-ico" aria-hidden="true">🤝</span><span class="stat-name">명과의 관계</span><span class="stat-num"></span></div><div class="segs" aria-hidden="true"></div></div>
     </div>
   </div>
   <p id="statNote" class="note" hidden>이 수치는 게임용이야. 실제 기록에 있는 숫자가 아니야.</p>
@@ -79,18 +79,10 @@
           <p id="simNote" class="sub" hidden></p>
           <div id="choices" class="choices"></div>
         </div>
-        <!-- 주사위 -->
-        <div id="pDice" hidden>
-          <h2>선택의 영향을 주사위로 정해 보자</h2>
-          <p class="sub">주사위는 게임용이야. 눈이 몇이 나와도 실제 역사는 바뀌지 않아.</p>
-          <div id="dice" class="dice" aria-live="polite"><span class="dice-face" id="diceFace"></span></div>
-          <p id="diceMsg" class="match" role="status"></p>
-          <button id="btnRoll" class="btn" type="button">주사위 굴리기</button>
-          <button id="btnAfterDice" class="btn" type="button" hidden>실제 역사 보기</button>
-        </div>
         <!-- 피드백 -->
         <div id="after" hidden>
           <p id="fbPick" class="match"></p>
+          <div id="rollBox" class="rollbox" role="status" aria-live="polite"></div>
           <div class="fb real"><p class="fb-h">실제 역사에서는</p><p id="fbReal"></p><p id="fbBook" class="book" hidden></p></div>
           <div class="fb other"><p class="fb-h">같은 시기 다른 현장에선</p><p id="fbOther"></p></div>
           <p id="fbExtra" class="extra" hidden></p>

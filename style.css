@@ -11,13 +11,38 @@ body{margin:0;background:var(--paper);color:var(--ink);font:1rem/1.7 'Pretendard
 .top h1{margin:4px 0 0;font-size:1.25rem;line-height:1.35}
 .chip{display:inline-block;font-size:1rem;font-weight:700;padding:2px 10px;border-radius:999px;background:rgba(255,255,255,.18)}
 .chip.alt{background:var(--indigo-bg);color:var(--indigo)}
-.stats{display:flex;gap:8px;flex-wrap:wrap}
-.stat{background:rgba(0,0,0,.22);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;min-height:var(--tap)}
-.stat-name{font-size:1rem}
-.pips{display:inline-flex;gap:3px}
-.pip{width:10px;height:10px;border-radius:50%;border:1.5px solid #fff;display:inline-block}
-.pip.on{background:#ffd479;border-color:#ffd479}
-.stat-num{font-weight:700;min-width:1.2em;text-align:right}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex-basis:100%}
+.stat{position:relative;background:rgba(0,0,0,.28);border-radius:10px;padding:8px 10px 10px;overflow:visible}
+.stat-head{display:flex;align-items:center;gap:5px;margin-bottom:6px;line-height:1.2}
+.stat-ico{font-size:1.15rem}
+.stat-name{font-size:1rem;font-weight:700;flex:1;min-width:0}
+.stat-num{font-weight:800;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.segs{display:flex;gap:4px}
+.seg{flex:1;height:14px;border-radius:4px;background:rgba(255,255,255,.2);transition:background .35s}
+.stat[data-k="s"] .seg.on{background:#ffd479}
+.stat[data-k="m"] .seg.on{background:#ff9fb0}
+.stat[data-k="g"] .seg.on{background:#8fd3ff}
+.stat.low .stat-num{color:#ffb4a8}
+.stat.low .seg.on{background:#ff7a66!important;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.55}}
+.delta{position:absolute;right:6px;top:-12px;font-weight:800;font-size:1.05rem;padding:0 8px;border-radius:999px;color:#fff;animation:floatup 1.5s ease-out forwards;pointer-events:none}
+.delta.up{background:#2f9e6f}.delta.down{background:#d64a3a}
+@keyframes floatup{0%{transform:translateY(10px);opacity:0}15%{opacity:1}70%{opacity:1}100%{transform:translateY(-8px);opacity:0}}
+.stat.flash-up{animation:flashup .7s}.stat.flash-down{animation:flashdown .7s}
+@keyframes flashup{0%,100%{box-shadow:none}30%{box-shadow:0 0 0 3px #5fd6a0}}
+@keyframes flashdown{0%,100%{box-shadow:none;transform:none}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}30%{box-shadow:0 0 0 3px #ff7a66}}
+.rollbox{margin:0 0 12px}
+.roll-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:6px}
+.roll-row.up{border-left:5px solid #2f9e6f}.roll-row.down{border-left:5px solid #d64a3a}
+.rr-name{min-width:5.2em;font-weight:700}
+.roll-row .segs{flex:1;max-width:200px}
+.roll-row .seg{background:#e4ddcc;height:12px}
+.roll-row.up .seg.on{background:#2f9e6f}.roll-row.down .seg.on{background:#d64a3a}
+.roll-row .seg.chg{outline:2px solid var(--ink);outline-offset:1px}
+.rr-amt{min-width:3.4em;text-align:right;font-size:1.1rem}
+.roll-row.up .rr-amt{color:#1f7a53}.roll-row.down .rr-amt{color:#b8382b}
+.roll-note{color:var(--sub);margin:4px 0 0;font-size:1rem}
+@media(prefers-reduced-motion:reduce){.delta,.stat.flash-up,.stat.flash-down,.stat.low .seg.on{animation:none}}
 .note,.preview-bar{max-width:880px;margin:6px auto 0;font-size:1rem}
 .preview-bar{background:var(--amber-bg);color:var(--amber);padding:6px 10px;border-radius:6px;font-weight:700}
 main{max-width:880px;margin:0 auto;padding:16px}
@@ -91,12 +116,6 @@ details.hint summary{cursor:pointer;min-height:var(--tap);display:flex;align-ite
 .land-label{position:absolute;font-size:1rem;font-weight:800;color:#fff;background:rgba(35,38,44,.6);padding:0 6px;border-radius:4px}
 .cap{margin:6px 0 0;text-align:center}
 .panel h2{font-size:1.2rem}
-.dice{display:flex;justify-content:center;margin:12px 0}
-.dice-face{width:88px;height:88px;border:4px solid var(--ink);border-radius:12px;background:#fff;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:8px;gap:2px}
-.dice-face i{border-radius:50%;background:var(--ink);width:16px;height:16px;place-self:center}
-.dice.rolling .dice-face{animation:shake .25s infinite}
-@keyframes shake{0%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}100%{transform:rotate(-6deg)}}
-@media(prefers-reduced-motion:reduce){.dice.rolling .dice-face{animation:none}}
 .endmap{margin:8px auto 16px}
 .choice.front{font-weight:700}
 .choice small{display:block;font-weight:400;color:var(--sub)}
