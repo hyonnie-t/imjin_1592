@@ -18,8 +18,8 @@ var S = { avatar: 'seonbi', sid: '', name: '', preview: false, turn: 0, cur: -1,
 
 function $(id) { return document.getElementById(id); }
 function show(id) {
-  ['vLogin', 'vAvatar', 'vIntro', 'vSim', 'vEnd', 'vResult', 'vDone'].forEach(function (v) { $(v).hidden = (v !== id); });
-  $('stats').hidden = !(id === 'vSim' || id === 'vEnd' || id === 'vResult');
+  ['vLogin', 'vAvatar', 'vIntro', 'vSim', 'vEnd', 'vDone'].forEach(function (v) { $(v).hidden = (v !== id); });
+  $('stats').hidden = !(id === 'vSim' || id === 'vEnd');
   $('statNote').hidden = $('stats').hidden;
   window.scrollTo(0, 0);
 }
@@ -279,8 +279,10 @@ function showEnd() {
   $('endS').textContent = S.stats.s; $('endM').textContent = S.stats.m; $('endG').textContent = S.stats.g;
   $('endMatch').textContent = '실제 역사와 같은 선택을 한 장면: ' + sameCount() + ' / ' + SCENES.length;
   choiceLines($('endList'));
-  fillSceneSelect($('selPivot'), true);
-  $('endErr').textContent = '';
+  fillSceneSelect($('selDiary'), true);
+  $('diaryFact').hidden = true; $('txtDiary').value = ''; $('resErr').textContent = '';
+  var btnS = $('btnSubmit'); btnS.disabled = false; btnS.textContent = '제출하기';
+  $('diaryIntro').textContent = '내가 고른 인물인 ‘' + avatarName() + '’의 눈으로, 시뮬레이션에서 지나온 장면 하나를 일기로 남겨 보자.';
   show('vEnd');
   if (!MVEND) MVEND = MapView.create({ canvas: $('endCv'), overlay: $('endOv'), interactive: false, token: false });
   MVEND.resize();
@@ -289,45 +291,31 @@ function showEnd() {
   SCENES.forEach(function (sc, i) { bd[sc.node] = LETTERS[S.picks[i]]; });
   MVEND.setNodes(st); MVEND.setBadges(bd); MVEND.setRoute(visitedNodes());
 }
-function toResult() {
-  if ($('selPivot').value === '' || $('txtPivot').value.trim().length < 5) {
-    $('endErr').textContent = '결정적이었다고 생각하는 장면과 이유를 먼저 적어 줘.'; return;
-  }
-  $('endErr').textContent = '';
-  choiceLines($('recList'));
-  fillSceneSelect($('selScene'), true);
-  $('effectBox').hidden = !EFFECT_TEXTBOOK.length;
-  show('vResult');
+function avatarName() { var av = AVATARS.filter(function (x) { return x.key === S.avatar; })[0]; return av ? av.name : '인물'; }
+function showDiaryFact() {
+  var v = $('selDiary').value, box = $('diaryFact');
+  if (v === '') { box.hidden = true; return; }
+  var i = +v, sc = SCENES[i];
+  $('diaryMine').textContent = '내가 고른 선택 — ' + LETTERS[S.picks[i]] + '. ' + sc.choices[S.picks[i]].t;
+  $('diaryReal').textContent = sc.date + ' · ' + sc.place + ' — ' + sc.history;
+  box.hidden = false;
 }
-function showEffect() {
-  var body = $('effectBody');
-  body.innerHTML = '';
-  EFFECT_TEXTBOOK.forEach(function (e) {
-    var p = document.createElement('p');
-    p.textContent = e.who + ': ' + e.text + ' (교과서 137쪽)';
-    body.appendChild(p);
-  });
-  body.hidden = !body.hidden;
-}
-
-/* ── 제출 ── */
 function sentenceCount(t) {
   return t.split(/[.!?。\n]+/).filter(function (x) { return x.trim().length >= 4; }).length;
 }
 function buildPlainText() {
-  var d = $('selDecide').value, sc = SCENES[+$('selScene').value];
-  return '[임진왜란 탐구]\n' +
-    '1. 나의 선택: 일본의 교류 요청에 ' + d + '.\n' +
-    '2. 근거 장면: ' + sc.place + '\n' +
-    '3. 이유:\n' + $('txtEssay').value.trim();
+  var sc = SCENES[+$('selDiary').value];
+  return '[임진왜란 일기]\n' +
+    sc.date + ' · ' + sc.place + ' · ' + avatarName() + '의 일기\n\n' +
+    $('txtDiary').value.trim();
 }
 function submit() {
   var err = $('resErr');
-  var d = $('selDecide').value, si = $('selScene').value, reason = $('txtEssay').value.trim();
-  if (!d || si === '') { err.textContent = '나의 선택과 근거 장면을 모두 골라 줘.'; return; }
-  if (sentenceCount(reason) < 2) { err.textContent = '이유를 2문장 이상 써 줘.'; return; }
+  var si = $('selDiary').value, text = $('txtDiary').value.trim();
+  if (si === '') { err.textContent = '일기로 남길 장면을 먼저 골라 줘.'; return; }
+  if (sentenceCount(text) < 3) { err.textContent = '일기를 3문장 이상 써 줘.'; return; }
   err.textContent = '';
-  var pivIdx = +$('selPivot').value;
+  var n = +si;
   var detail = {
     avatar: S.avatar,
     picks: S.picks.map(function (p) { return LETTERS[p]; }),
@@ -335,17 +323,15 @@ function submit() {
     dice: S.dice.map(function (d) { return d ? d.n : null; }),
     stats: S.stats,
     sameAsHistory: sameCount(),
-    pivotal: { scene: pivIdx + 1, reason: $('txtPivot').value.trim() },
-    impacts: { joseon: $('imJ').value.trim(), japan: $('imN').value.trim(), ming: $('imM').value.trim() },
-    essay: { decision: d, scene: (+si) + 1, reason: reason }
+    diary: { scene: n + 1, persona: avatarName(), text: text }
   };
   var body = {
     studentId: S.sid,
     studentName: S.name,
     gameName: CONFIG.GAME_NAME,
     choiceSummary: S.picks.map(function (p, i) { return (i + 1) + LETTERS[p]; }).join(' '),
-    diffSummary: '실제 역사와 같은 선택 ' + sameCount() + '/' + SCENES.length + ' · 결정적 장면 ' + (pivIdx + 1),
-    reflection: '[결정적 장면] ' + $('txtPivot').value.trim() + '\n[선택] ' + d + ' / 근거 장면 ' + ((+si) + 1) + '\n[이유] ' + reason,
+    diffSummary: '실제 역사와 같은 선택 ' + sameCount() + '/' + SCENES.length + ' · 일기 장면 ' + (n + 1),
+    reflection: '[일기 장면] ' + (n + 1) + '. ' + SCENES[n].place + '\n[인물] ' + avatarName() + '\n[일기] ' + text,
     choicesJson: JSON.stringify(detail)
   };
   Object.assign(body, FocusGuard.payload());
@@ -394,17 +380,14 @@ function init() {
   $('previewBar').hidden = !S.preview;
   $('inSid').value = q.get('sid') || (S.preview ? '30512' : '');
   $('inName').value = q.get('name') || (S.preview ? '미리보기' : '');
-  $('essayQ').textContent = ESSAY_Q;
-  $('hintPivot').textContent = HINTS.pivotal;
-  $('hintEssay').textContent = HINTS.essay;
+  $('hintDiary').textContent = HINTS.diary;
   renderBg();
   $('btnLogin').addEventListener('click', login);
   $('btnStart').addEventListener('click', startSim);
   $('btnAvatar').addEventListener('click', function () { show('vIntro'); });
   $('btnNext').addEventListener('click', nextStep);
   window.addEventListener('resize', function () { if (MV && !$('vSim').hidden) MV.resize(); if (MVEND && !$('vEnd').hidden) MVEND.resize(); });
-  $('btnToResult').addEventListener('click', toResult);
-  $('btnEffect').addEventListener('click', showEffect);
+  $('selDiary').addEventListener('change', showDiaryFact);
   $('btnSubmit').addEventListener('click', submit);
   $('btnCopy').addEventListener('click', function () { copyText(); });
   if (parseSid($('inSid').value) && $('inName').value.trim()) {

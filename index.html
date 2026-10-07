@@ -104,57 +104,30 @@
     <h3>내가 지나온 길</h3>
     <div class="mapwrap endmap"><canvas id="endCv" aria-hidden="true"></canvas><div id="endOv" class="mapov" data-no-gloss></div></div>
     <ol id="endList" class="endlist"></ol>
-    <div class="ask">
-      <p class="tag">토론 질문</p>
+    <details class="hint">
+      <summary>💬 같이 이야기해 볼 질문</summary>
       <p>내 수치가 높았는데 실제 역사와 다른 결과가 나온 장면은 어디였나? 왜 그런 어긋남이 생겼을까?</p>
       <p>교과서 136쪽 소제목은 한산도 대첩을 전세를 바꾼 승리로 서술한다. 내가 고른 장면과 같을까, 다를까?</p>
+    </details>
+
+    <h3>임진왜란 일기 쓰기</h3>
+    <p id="diaryIntro" class="sub"></p>
+    <label for="selDiary">일기로 남길 장면</label>
+    <select id="selDiary"></select>
+    <div id="diaryFact" class="fb real" hidden>
+      <p id="diaryMine" class="fb-h"></p>
+      <p class="fb-h">이 장면에서 실제로 있었던 일</p>
+      <p id="diaryReal"></p>
     </div>
-    <h3>가장 결정적이었다고 생각하는 장면</h3>
-    <label for="selPivot">장면 고르기</label>
-    <select id="selPivot"></select>
-    <label for="txtPivot">이유</label>
-    <textarea id="txtPivot" rows="4" placeholder="왜 이 장면이 가장 결정적이라고 생각했는지 써 보자."></textarea>
-    <details class="hint"><summary>💡 막막하면 힌트 보기</summary><p id="hintPivot"></p></details>
-    <p id="endErr" class="err" role="alert"></p>
-    <button id="btnToResult" class="btn" type="button">전쟁이 남긴 것 정리하러 가기</button>
-  </section>
-
-  <!-- 결과·글쓰기 -->
-  <section id="vResult" class="card" hidden>
-    <p class="tag">교과서 137쪽 연계</p>
-    <h2>그 전쟁은 세 나라에 각각 무엇을 남겼을까?</h2>
-    <h3>1. 세 나라에 남긴 영향 정리</h3>
-    <p class="sub">교과서를 보기 전에 오늘 시뮬레이션에서 본 것을 바탕으로 먼저 써 보자.</p>
-    <div class="grid3">
-      <div><label for="imJ">조선</label><textarea id="imJ" rows="3"></textarea></div>
-      <div><label for="imN">일본</label><textarea id="imN" rows="3"></textarea></div>
-      <div><label for="imM">명</label><textarea id="imM" rows="3"></textarea></div>
-    </div>
-    <div id="effectBox" hidden>
-      <button id="btnEffect" class="btn-ghost" type="button">교과서 137쪽 문장과 비교하기</button>
-      <div id="effectBody" class="fb real" hidden></div>
-    </div>
-
-    <h3>2. 교과서 137쪽 역할극</h3>
-    <p>교과서 137쪽에는 『선조실록』을 바탕으로 재구성한 역할극 대본이 실려 있어. 일본의 교류 요청에 응할 것인가 말 것인가를 두고 대본을 읽어 보자.</p>
-
-    <h3>3. 내가 내린 선택 다시 보기</h3>
-    <ol id="recList" class="endlist"></ol>
-
-    <h3>4. 탐구 글쓰기</h3>
-    <p class="ask-q" id="essayQ"></p>
-    <p class="sub">조건: 선택 1줄 + 근거 장면 1개 + 이유 2문장 이상. 교과서 문장을 그대로 베끼지 않기.</p>
-    <label for="selDecide">나의 선택</label>
-    <select id="selDecide">
-      <option value="">선택하기</option>
-      <option value="응할 것이다">일본의 교류 요청에 응할 것이다.</option>
-      <option value="응하지 않을 것이다">일본의 교류 요청에 응하지 않을 것이다.</option>
-    </select>
-    <label for="selScene">근거로 삼을 장면</label>
-    <select id="selScene"></select>
-    <label for="txtEssay">이유 (2문장 이상)</label>
-    <textarea id="txtEssay" rows="6"></textarea>
-    <details class="hint"><summary>💡 막막하면 힌트 보기</summary><p id="hintEssay"></p></details>
+    <p class="sub">일기는 창작이야. 다만 날짜·장소·사건은 위에서 확인한 사실에 맞춰 쓰고, 상상은 인물의 마음과 행동에만 담아 줘.</p>
+    <ul class="checks" aria-label="쓰기 전 점검">
+      <li><label><input type="checkbox"> 위 ‘실제로 있었던 일’에서 한 가지 이상을 넣었다</label></li>
+      <li><label><input type="checkbox"> 이 인물의 처지(신분·하는 일)가 드러나게 썼다</label></li>
+      <li><label><input type="checkbox"> 내가 고른 선택에 대한 이 인물의 생각을 한 줄 넣었다</label></li>
+    </ul>
+    <label for="txtDiary">일기 (3문장 이상)</label>
+    <textarea id="txtDiary" rows="8"></textarea>
+    <details class="hint"><summary>💡 막막하면 힌트 보기</summary><p id="hintDiary"></p></details>
     <p id="resErr" class="err" role="alert"></p>
     <button id="btnSubmit" class="btn" type="button">제출하기</button>
   </section>

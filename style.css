@@ -11,13 +11,13 @@ body{margin:0;background:var(--paper);color:var(--ink);font:1rem/1.7 'Pretendard
 .top h1{margin:4px 0 0;font-size:1.25rem;line-height:1.35}
 .chip{display:inline-block;font-size:1rem;font-weight:700;padding:2px 10px;border-radius:999px;background:rgba(255,255,255,.18)}
 .chip.alt{background:var(--indigo-bg);color:var(--indigo)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex-basis:100%}
-.stat{position:relative;background:rgba(0,0,0,.28);border-radius:10px;padding:8px 10px 10px;overflow:visible}
-.stat-head{display:flex;align-items:center;gap:5px;margin-bottom:6px;line-height:1.2}
-.stat-ico{font-size:1.15rem}
-.stat-name{font-size:1rem;font-weight:700;flex:1;min-width:0}
-.stat-num{font-weight:800;font-size:1.05rem;font-variant-numeric:tabular-nums}
-.segs{display:flex;gap:4px}
+.stats{display:grid;grid-template-columns:1fr;gap:6px;flex-basis:100%}
+.stat{display:grid;grid-template-columns:auto 5.8em 1fr 2.6em 2.8em;align-items:center;gap:8px;background:rgba(0,0,0,.28);border-radius:10px;padding:6px 10px}
+.stat-head{display:contents}
+.stat-ico{font-size:1.15rem;line-height:1}
+.stat-name{font-size:1rem;font-weight:700;white-space:nowrap}
+.segs{order:2;display:flex;gap:4px}
+.stat-num{order:3;font-weight:800;font-size:1.05rem;font-variant-numeric:tabular-nums;text-align:right}
 .seg{flex:1;height:14px;border-radius:4px;background:rgba(255,255,255,.2);transition:background .35s}
 .stat[data-k="s"] .seg.on{background:#ffd479}
 .stat[data-k="m"] .seg.on{background:#ff9fb0}
@@ -25,9 +25,9 @@ body{margin:0;background:var(--paper);color:var(--ink);font:1rem/1.7 'Pretendard
 .stat.low .stat-num{color:#ffb4a8}
 .stat.low .seg.on{background:#ff7a66!important;animation:blink 1s infinite}
 @keyframes blink{50%{opacity:.55}}
-.delta{position:absolute;right:6px;top:-12px;font-weight:800;font-size:1.05rem;padding:0 8px;border-radius:999px;color:#fff;animation:floatup 1.5s ease-out forwards;pointer-events:none}
+.delta{order:4;justify-self:start;font-weight:800;font-size:1rem;padding:0 8px;border-radius:999px;color:#fff;animation:pop 1.5s ease-out forwards;pointer-events:none}
 .delta.up{background:#2f9e6f}.delta.down{background:#d64a3a}
-@keyframes floatup{0%{transform:translateY(10px);opacity:0}15%{opacity:1}70%{opacity:1}100%{transform:translateY(-8px);opacity:0}}
+@keyframes pop{0%{transform:scale(.4);opacity:0}15%{transform:scale(1.15);opacity:1}25%{transform:scale(1)}75%{opacity:1}100%{opacity:0}}
 .stat.flash-up{animation:flashup .7s}.stat.flash-down{animation:flashdown .7s}
 @keyframes flashup{0%,100%{box-shadow:none}30%{box-shadow:0 0 0 3px #5fd6a0}}
 @keyframes flashdown{0%,100%{box-shadow:none;transform:none}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}30%{box-shadow:0 0 0 3px #ff7a66}}
@@ -136,3 +136,8 @@ details.hint summary{cursor:pointer;min-height:var(--tap);display:flex;align-ite
 .nlabel.right{left:100%;top:50%;transform:translateY(-50%);margin:0 0 0 -2px}
 .node[data-side="top"] .nbadge{top:auto;bottom:-6px}
 .node[data-side="right"] .nbadge{right:auto;left:-4px}
+
+.checks{list-style:none;margin:8px 0 12px;padding:0}
+.checks li{margin:2px 0}
+.checks label{display:flex;gap:10px;align-items:flex-start;min-height:var(--tap);padding:6px 0;font-weight:400}
+.checks input{width:22px;height:22px;margin-top:3px;flex:none}
