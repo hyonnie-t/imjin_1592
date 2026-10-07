@@ -67,9 +67,6 @@ input:focus,select:focus,textarea:focus{outline:3px solid var(--indigo-bg);borde
 .ok{color:var(--jade);font-weight:700}
 .grid3{display:grid;grid-template-columns:1fr;gap:12px}
 @media(min-width:720px){.grid3{grid-template-columns:repeat(3,1fr)}}
-.bg-cell{border:1px solid var(--line);border-radius:8px;padding:12px;background:#fff}
-.bg-cell b{display:block;font-size:1.1rem;margin-bottom:2px}
-.bg-reveal{margin:8px 0 0;padding:8px 10px;border-radius:6px;background:var(--indigo-bg)}
 .bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}
 .prog{font-weight:700;color:var(--seal)}
 .date{background:var(--indigo-bg);color:var(--indigo);padding:2px 12px;border-radius:999px;font-weight:700}
@@ -232,3 +229,20 @@ body.modal-open{overflow:hidden}
 .dx-sample-head{margin:8px 0 2px;font-weight:800;color:var(--indigo)}
 .dx-sample{margin:0 0 4px;line-height:1.8}
 @media(max-width:899px){body.modal-open{padding-bottom:62vh}} /* 시트가 덮는 만큼 페이지를 더 내릴 수 있게 해서 지도의 말이 시트 위에 남도록 한다 */
+
+/* 도입: 세 군대 */
+.army-chip{display:flex;flex-direction:column;gap:4px;min-height:var(--tap);padding:12px;text-align:left;font:inherit;color:inherit;background:#fff;border:2px solid var(--line);border-radius:10px;cursor:pointer}
+.army-chip b{font-size:1.1rem}
+.army-chip span{font-size:.95rem;color:var(--muted,#5b4630)}
+.army-chip.on{border-color:var(--indigo);background:var(--indigo-bg)}
+.army-chip.done b::after{content:' ✓';color:var(--indigo)}
+.army-q{margin:14px 0 6px;padding:14px;border:2px solid var(--indigo);border-radius:12px;background:#fff}
+.army-qt{margin:0 0 8px;font-weight:800;font-size:1.1rem}
+.army-opts{display:grid;gap:8px}
+.army-opt{min-height:var(--tap);padding:10px 12px;text-align:left;font:inherit;line-height:1.6;color:inherit;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.army-opt:hover:not(:disabled){background:var(--parch)}
+.army-opt.wrong{opacity:.45;text-decoration:line-through}
+.army-opt.right{border:2px solid var(--indigo);background:var(--indigo-bg);opacity:1}
+.army-fb{margin:10px 0 0;line-height:1.7}
+.army-fb.ok{padding:8px 10px;border-radius:6px;background:var(--indigo-bg)}
+.army-done{margin:10px 0;font-weight:700}

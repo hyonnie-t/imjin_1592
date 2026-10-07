@@ -90,26 +90,59 @@ function openAvatar() {
   });
 }
 
-/* ── 도입 비교표 ── */
+/* ── 도입: 그림 속 세 군대 — 이유 고르기 ── */
+var ARMY = { cur: -1, done: {} };
 function renderBg() {
-  var box = $('bgTable');
+  var box = $('armyChips');
   box.innerHTML = '';
-  BG_TABLE.forEach(function (row, i) {
-    var cell = document.createElement('div');
-    cell.className = 'bg-cell';
-    var b = document.createElement('b'); b.textContent = row.who;
-    var q = document.createElement('p'); q.className = 'sub'; q.textContent = row.hint;
-    var ta = document.createElement('textarea'); ta.rows = 3; ta.setAttribute('aria-label', row.who + ' 상황 적기');
-    cell.appendChild(b); cell.appendChild(q); cell.appendChild(ta);
-    if (row.reveal) {
-      var btn = document.createElement('button');
-      btn.type = 'button'; btn.className = 'btn-ghost'; btn.textContent = '교과서 설명 보기';
-      var rv = document.createElement('p'); rv.className = 'bg-reveal'; rv.hidden = true; rv.textContent = row.reveal;
-      btn.addEventListener('click', function () { rv.hidden = !rv.hidden; });
-      cell.appendChild(btn); cell.appendChild(rv);
-    }
-    box.appendChild(cell);
+  ARMY.cur = -1; ARMY.done = {};
+  $('armyQ').hidden = true; $('armyDone').hidden = true;
+  ARMIES.forEach(function (a, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'army-chip'; b.id = 'armyChip' + i;
+    var w = document.createElement('b'); w.textContent = a.who;
+    var c = document.createElement('span'); c.textContent = a.cap + ' (교과서 134쪽)';
+    b.appendChild(w); b.appendChild(c);
+    b.addEventListener('click', function () { openArmy(i); });
+    box.appendChild(b);
   });
+}
+function openArmy(i) {
+  ARMY.cur = i;
+  Array.prototype.forEach.call(document.querySelectorAll('.army-chip'), function (el, k) {
+    el.classList.toggle('on', k === i);
+  });
+  $('armyQ').hidden = false;
+  $('armyQTitle').textContent = ARMIES[i].who + '은(는) 왜 평양성에 있었을까?';
+  $('armyFb').textContent = ''; $('armyFb').className = 'army-fb';
+  var opts = $('armyOpts'); opts.innerHTML = '';
+  ARMY_ORDER.forEach(function (r) {
+    var o = document.createElement('button');
+    o.type = 'button'; o.className = 'army-opt'; o.textContent = ARMY_REASONS[r].t;
+    o.addEventListener('click', function () { pickReason(i, r, o); });
+    opts.appendChild(o);
+  });
+  if (ARMY.done[i]) showArmyAnswer(i);
+}
+function showArmyAnswer(i) {
+  var fb = $('armyFb');
+  fb.className = 'army-fb ok';
+  fb.textContent = '맞아. 교과서 135쪽 — ' + ARMY_REASONS[ARMIES[i].reason].book;
+  Array.prototype.forEach.call($('armyOpts').children, function (o, k) {
+    o.disabled = true; o.classList.toggle('right', ARMY_ORDER[k] === ARMIES[i].reason);
+  });
+}
+function pickReason(i, r, el) {
+  if (r === ARMIES[i].reason) {
+    ARMY.done[i] = true;
+    $('armyChip' + i).classList.add('done');
+    showArmyAnswer(i);
+    if (Object.keys(ARMY.done).length === ARMIES.length) $('armyDone').hidden = false;
+  } else {
+    el.disabled = true; el.classList.add('wrong');
+    $('armyFb').className = 'army-fb';
+    $('armyFb').textContent = '이건 다른 군대의 이유 같아. 교과서 135쪽을 다시 읽어 보자.';
+  }
 }
 
 /* ── 보드 (시기 → 현장 → 선택 → 주사위 → 실제 역사) ── */
