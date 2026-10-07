@@ -97,13 +97,13 @@ var SCENES = [
 
 /* 지도 도식 — 실제 지도가 아니라 거점 위치만 단순화한 배치(설계 좌표 80x100) */
 var NODE_POS = {
-  pyeongyang:  { x: 23.2, y: 34.4, label: '평양성' },
-  hanseong:    { x: 32, y: 49.6, label: '한성', side: 'left' },
-  uiryeong:    { x: 48, y: 59.2, label: '의령', side: 'right' },
-  jinju:       { x: 33.6, y: 78.4, label: '진주성', side: 'top' },
-  dongnae:     { x: 54.4, y: 72, label: '동래성', side: 'right' },
-  hansando:    { x: 46.4, y: 90.4, label: '한산도', side: 'right' },
-  myeongnyang: { x: 22.4, y: 84.8, label: '명량·노량' }
+  pyeongyang:  { x: 22.4, y: 20.8, label: '평양성' },
+  hanseong:    { x: 34.4, y: 38.8, label: '한성', side: 'left' },
+  uiryeong:    { x: 46.4, y: 57.2, label: '의령', side: 'right' },
+  jinju:       { x: 40, y: 68.8, label: '진주성', side: 'left' },
+  dongnae:     { x: 57.2, y: 68, label: '동래성', side: 'right' },
+  hansando:    { x: 48.8, y: 76.8, label: '한산도', side: 'right' },
+  myeongnyang: { x: 28, y: 76, label: '명량·노량' }
 };
 
 /* 손으로 찍은 거점 그림이 img/node_<키>.png 로 들어 있는 거점(없는 파일은 요청하지 않는다). w=지도 칸 너비(200x250 격자 기준), done=다녀온 뒤 _done.png로 교체 */
