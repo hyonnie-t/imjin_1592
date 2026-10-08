@@ -13,6 +13,9 @@ var CONFIG = {
   }
 };
 
+/* 블로그 공유용(?share=1): 학번·이름 없이 시작하고, 서버로 아무것도 보내지 않는다. 일기는 복사해서 가져가게 한다. */
+var SHARE = new URLSearchParams(location.search).get('share') === '1';
+
 var LETTERS = ['A', 'B', 'C'];
 var S = { avatar: 'seonbi', sid: '', name: '', preview: false, turn: 0, cur: -1, phase: 'turn', order: [], dice: [], picks: [], stats: null, submitted: false, guardOn: false };
 
@@ -200,7 +203,7 @@ function refreshMap() { MV.setNodes(nodeStates()); MV.setRoute(visitedNodes()); 
 function startSim() {
   S.turn = 0; S.picks = []; S.order = []; S.dice = []; S.phase = 'turn'; S.cur = -1;
   S.stats = { s: CONFIG.START, m: CONFIG.START, g: CONFIG.START };
-  if (!S.guardOn) { FocusGuard.start({ key: CONFIG.GAME_NAME + ':' + S.sid }); S.guardOn = true; }
+  if (!S.guardOn && !SHARE) { FocusGuard.start({ key: CONFIG.GAME_NAME + ':' + S.sid }); S.guardOn = true; }
   if (window.DraftGuard) DraftGuard.start({ key: CONFIG.GAME_NAME, sid: S.sid }); // 글쓰기 칸 임시저장 (history26 v75)
   Array.prototype.forEach.call(document.querySelectorAll('.stat'), function (el) { el.removeAttribute('data-prev'); });
   renderStats();
@@ -433,6 +436,7 @@ function submit() {
   if (sentenceCount(text) < 3) { err.textContent = '일기를 3문장 이상 써 줘.'; return; }
   if (text.indexOf('…') >= 0) { err.textContent = '일기에 …이 남아 있어. 내 말로 바꿔 써 줘.'; return; }
   err.textContent = '';
+  if (SHARE) { finishSubmit(); return; } // 공유용: 전송하지 않는다
   var n = +si;
   var detail = {
     avatar: S.avatar,
@@ -469,8 +473,18 @@ function submit() {
     err.textContent = '제출하지 못했어. 인터넷을 확인하고 다시 눌러 줘. ' + (e && e.message ? '(' + e.message + ')' : '');
   });
 }
+function finishShare() {
+  $('doneTitle').textContent = '일기를 완성했어';
+  $('doneMsg').textContent = '이 글은 어디에도 저장되거나 전송되지 않았어. 남기고 싶으면 복사해서 가져가 줘.';
+  $('padletBox').hidden = false;
+  $('padletBox').querySelector('p').textContent = '내 일기를 복사해서 메모장이나 블로그 댓글에 남겨 둘 수 있어.';
+  $('padletLink').parentNode.hidden = true;
+  $('copyMsg').textContent = '';
+  show('vDone');
+}
 function finishSubmit() {
   S.submitted = true;
+  if (SHARE) { finishShare(); return; }
   if (window.DraftGuard) DraftGuard.clear(); // 제출 성공 → 임시저장 삭제
   $('doneMsg').textContent = S.preview ? '미리보기라서 실제로 저장되지는 않았어.' : '내 기록이 저장됐어.';
   var p = parseSid(S.sid);
@@ -482,7 +496,7 @@ function finishSubmit() {
 }
 function copyText() {
   var text = buildPlainText();
-  var done = function () { $('copyMsg').textContent = '복사했어. 패들렛에 붙여 넣어 줘.'; };
+  var done = function () { $('copyMsg').textContent = SHARE ? '복사했어.' : '복사했어. 패들렛에 붙여 넣어 줘.'; };
   var fallback = function () {
     $('copyFallback').hidden = false; $('copyFallback').open = true;
     $('copyArea').value = text; $('copyArea').select();
@@ -497,6 +511,7 @@ function init() {
   var q = new URLSearchParams(location.search);
   S.preview = q.get('preview') === '1';
   $('previewBar').hidden = !S.preview;
+  if (SHARE) { $('chip').textContent = '중학교 한국사 · 임진왜란'; $('btnSubmit').textContent = '일기 완성하기'; }
   $('inSid').value = q.get('sid') || (S.preview ? '30512' : '');
   $('inName').value = q.get('name') || (S.preview ? '미리보기' : '');
   renderBg();
@@ -509,7 +524,8 @@ function init() {
   $('selDiary').addEventListener('change', showDiaryFact);
   $('btnSubmit').addEventListener('click', submit);
   $('btnCopy').addEventListener('click', function () { copyText(); });
-  if (parseSid($('inSid').value) && $('inName').value.trim()) {
+  if (SHARE) { S.sid = 'guest'; S.name = ''; openAvatar(); }
+  else if (parseSid($('inSid').value) && $('inName').value.trim()) {
     S.sid = $('inSid').value.trim(); S.name = $('inName').value.trim();
     openAvatar();
   } else show('vLogin');
