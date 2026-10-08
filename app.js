@@ -103,10 +103,10 @@ function renderBg() {
   ARMIES.forEach(function (a, i) {
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'army-chip'; b.id = 'armyChip' + i;
-    if (a.img) { var im = document.createElement('img'); im.src = a.img; im.alt = '평양성 탈환도의 일부 — ' + a.cap; im.loading = 'lazy'; b.appendChild(im); }
+    if (a.img) { var im = document.createElement('img'); im.src = a.img; im.alt = ''; im.loading = 'lazy'; b.appendChild(im); }
     var w = document.createElement('b'); w.textContent = a.who;
-    var c = document.createElement('span'); c.textContent = a.cap + ' (교과서 134쪽)';
-    b.appendChild(w); b.appendChild(c);
+    b.setAttribute('aria-label', a.who + ' — ' + a.cap);
+    b.appendChild(w);
     b.addEventListener('click', function () { openArmy(i); });
     box.appendChild(b);
   });
@@ -118,6 +118,9 @@ function openArmy(i) {
   });
   $('armyQ').hidden = false;
   $('armyQTitle').textContent = ARMIES[i].who + '은(는) 왜 평양성에 있었을까?';
+  var qi = $('armyQImg'); qi.src = ARMIES[i].img; qi.alt = '평양성 탈환도의 일부 — ' + ARMIES[i].cap;
+  $('armyQCap').textContent = ARMIES[i].cap + ' (교과서 134쪽 설명)';
+  if ($('armyQ').scrollIntoView) $('armyQ').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   $('armyFb').textContent = ''; $('armyFb').className = 'army-fb';
   var opts = $('armyOpts'); opts.innerHTML = '';
   ARMY_ORDER.forEach(function (r) {

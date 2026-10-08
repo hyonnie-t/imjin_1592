@@ -253,3 +253,11 @@ body.modal-open{overflow:hidden}
 #armyChips{align-items:start}
 .army-chip img{display:block;width:100%;height:auto;margin:0 0 6px;border:1px solid var(--line);border-radius:6px}
 .credit{margin:8px 0 0;font-size:.85rem;line-height:1.5;color:var(--muted,#5b4630)}
+
+/* 도입 화면 줄이기: 군대 카드는 작은 그림 3칸, 고른 군대의 그림은 질문 칸에서 보여 준다 */
+#armyChips{grid-template-columns:repeat(3,1fr);gap:8px}
+.army-chip{padding:8px;text-align:center}
+.army-chip img{aspect-ratio:1/1;object-fit:cover;margin:0 0 4px}
+.army-chip b{font-size:1rem}
+.army-qimg{display:block;max-width:100%;max-height:220px;margin:0 auto 6px;border:1px solid var(--line);border-radius:6px}
+.army-qcap{margin:0 0 8px;font-size:.9rem;text-align:center;color:var(--muted,#5b4630)}
