@@ -103,6 +103,7 @@ function renderBg() {
   ARMIES.forEach(function (a, i) {
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'army-chip'; b.id = 'armyChip' + i;
+    if (a.img) { var im = document.createElement('img'); im.src = a.img; im.alt = '평양성 탈환도의 일부 — ' + a.cap; im.loading = 'lazy'; b.appendChild(im); }
     var w = document.createElement('b'); w.textContent = a.who;
     var c = document.createElement('span'); c.textContent = a.cap + ' (교과서 134쪽)';
     b.appendChild(w); b.appendChild(c);
@@ -511,7 +512,7 @@ function init() {
   var q = new URLSearchParams(location.search);
   S.preview = q.get('preview') === '1';
   $('previewBar').hidden = !S.preview;
-  if (SHARE) { $('chip').textContent = '중학교 한국사 · 임진왜란'; $('btnSubmit').textContent = '일기 완성하기'; }
+  if (SHARE) { $('introQ').textContent = '아래 「평양성 탈환도」를 보자. 세 나라 군대가 왜 평양성에서 싸웠을까?'; $('chip').textContent = '중학교 한국사 · 임진왜란'; $('btnSubmit').textContent = '일기 완성하기'; }
   $('inSid').value = q.get('sid') || (S.preview ? '30512' : '');
   $('inName').value = q.get('name') || (S.preview ? '미리보기' : '');
   renderBg();

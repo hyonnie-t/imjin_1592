@@ -246,3 +246,10 @@ body.modal-open{overflow:hidden}
 .army-fb{margin:10px 0 0;line-height:1.7}
 .army-fb.ok{padding:8px 10px;border-radius:6px;background:var(--indigo-bg)}
 .army-done{margin:10px 0;font-weight:700}
+
+.pwrap{margin:0 0 14px}
+.pwrap img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:8px}
+.pwrap figcaption{margin-top:4px;font-size:.9rem;color:var(--muted,#5b4630)}
+#armyChips{align-items:start}
+.army-chip img{display:block;width:100%;height:auto;margin:0 0 6px;border:1px solid var(--line);border-radius:6px}
+.credit{margin:8px 0 0;font-size:.85rem;line-height:1.5;color:var(--muted,#5b4630)}

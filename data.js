@@ -146,9 +146,9 @@ var AVATARS = [
 /* 도입 비교표 — 학생이 먼저 채운다. 교과서 문장은 교사 확인이 끝난 것만 reveal 에 둔다. */
 /* 도입 — 134쪽 「평양성 탈환도」 설명 글(그림 아래 세 줄)과 135쪽 본문만 쓴다. 교과서 밖 사실은 넣지 않는다. */
 var ARMIES = [
-  { who: '조선군', cap: '명군의 후방을 지원하는 조선군', reason: 0 },
-  { who: '명군', cap: '대포를 이용하여 공격하는 명군', reason: 1 },
-  { who: '일본군', cap: '조총으로 대항하는 일본군', reason: 2 }
+  { who: '조선군', cap: '명군의 후방을 지원하는 조선군', img: 'img/pyeongyang_joseon.jpg', reason: 0 },
+  { who: '명군', cap: '대포를 이용하여 공격하는 명군', img: 'img/pyeongyang_ming.jpg', reason: 1 },
+  { who: '일본군', cap: '조총으로 대항하는 일본군', img: 'img/pyeongyang_japan.jpg', reason: 2 }
 ];
 var ARMY_REASONS = [
   { t: '일본이 쳐들어오자 명에 도움을 청했어. 그래서 명과 함께 평양성을 되찾으려 했어.',
