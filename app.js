@@ -103,7 +103,7 @@ function renderBg() {
   ARMIES.forEach(function (a, i) {
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'army-chip'; b.id = 'armyChip' + i;
-    if (a.img) { var im = document.createElement('img'); im.src = a.img; im.alt = ''; im.loading = 'lazy'; b.appendChild(im); }
+    if (a.img) { var im = document.createElement('img'); im.src = a.img; im.alt = ''; im.loading = 'lazy'; im.style.maxWidth = '100%'; im.style.width = '100%'; im.style.height = 'auto'; b.appendChild(im); }
     var w = document.createElement('b'); w.textContent = a.who;
     b.setAttribute('aria-label', a.who + ' — ' + a.cap);
     b.appendChild(w);
