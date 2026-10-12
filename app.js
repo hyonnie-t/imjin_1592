@@ -18,7 +18,7 @@ var CONFIG = {
 var SHARE = new URLSearchParams(location.search).get('share') === '1';
 
 var LETTERS = ['A', 'B', 'C'];
-var S = { avatar: 'seonbi', sid: '', name: '', preview: false, turn: 0, cur: -1, phase: 'turn', order: [], dice: [], picks: [], stats: null, submitted: false, guardOn: false };
+var S = { avatar: 'seonbi', sid: '', name: '', preview: false, turn: 0, cur: -1, phase: 'turn', order: [], dice: [], picks: [], shown: [], stats: null, submitted: false, guardOn: false };
 
 function $(id) { return document.getElementById(id); }
 function show(id) {
@@ -206,7 +206,7 @@ function nodeStates() {
 function refreshMap() { MV.setNodes(nodeStates()); MV.setRoute(visitedNodes()); }
 
 function startSim() {
-  S.turn = 0; S.picks = []; S.order = []; S.dice = []; S.phase = 'turn'; S.cur = -1;
+  S.turn = 0; S.picks = []; S.shown = []; S.order = []; S.dice = []; S.phase = 'turn'; S.cur = -1;
   S.stats = { s: CONFIG.START, m: CONFIG.START, g: CONFIG.START };
   if (!S.guardOn && !SHARE) { FocusGuard.start({ key: CONFIG.GAME_NAME + ':' + S.sid }); S.guardOn = true; }
   if (window.DraftGuard) DraftGuard.start({ key: CONFIG.GAME_NAME, sid: S.sid }); // 글쓰기 칸 임시저장 (history26 v75)
@@ -258,29 +258,34 @@ function openScene(i) {
   $('simSit').textContent = sc.situation;
   var note = $('simNote'); note.hidden = !sc.note; note.textContent = sc.note || '';
   var box = $('choices'); box.innerHTML = ''; box.className = 'choices';
-  sc.choices.forEach(function (c, k) {
+  // 선택지 순서를 장면을 열 때마다 무작위로 섞는다(A를 고르는 습관 방지). k는 원래 번호라 picks·real·수치 계산은 그대로,
+  // 화면에 보이는 알파벳만 자리(pos) 기준이다. 학생이 본 알파벳은 S.shown에 저장해 결과·지도에서 같은 글자로 보여 준다.
+  var idx = sc.choices.map(function (c, k) { return k; });
+  for (var j = idx.length - 1; j > 0; j--) { var r = Math.floor(Math.random() * (j + 1)), t = idx[j]; idx[j] = idx[r]; idx[r] = t; }
+  idx.forEach(function (k, pos) {
+    var c = sc.choices[k];
     var b = document.createElement('button');
     b.type = 'button'; b.className = 'choice';
-    var lt = document.createElement('span'); lt.className = 'lt'; lt.textContent = LETTERS[k] + '.';
+    var lt = document.createElement('span'); lt.className = 'lt'; lt.textContent = LETTERS[pos] + '.';
     b.appendChild(lt); b.appendChild(document.createTextNode(c.t));
     b.addEventListener('click', function () {
       if (S.phase !== 'scene' || box.classList.contains('locked')) return;
       box.classList.add('locked'); b.classList.add('picked'); // 고른 카드를 잠깐 눌러 보여 준 뒤 결과로 넘어간다
-      setTimeout(function () { pick(k); }, 360);
+      setTimeout(function () { pick(k, pos); }, 360);
     });
     box.appendChild(b);
   });
   panel('pScene'); refreshMap();
   if (window.innerWidth < 900) { var mw = document.querySelector('.mapwrap'); if (mw) window.scrollTo({ top: Math.max(0, mw.getBoundingClientRect().top + window.pageYOffset - 8), behavior: 'auto' }); }
 }
-function pick(k) {
+function pick(k, pos) {
   if (S.phase !== 'scene') return;
   var i = S.cur, c = SCENES[i].choices[k];
   var n = 1 + Math.floor(Math.random() * 6), e = diceEffect(n); // 게임용 무작위: 실제 역사 결과는 바뀌지 않는다
   var before = { s: S.stats.s, m: S.stats.m, g: S.stats.g };
   S.stats[c.up] = clamp(S.stats[c.up] + e.up);
   S.stats[c.down] = clamp(S.stats[c.down] - e.down);
-  S.picks[i] = k; S.order.push(i);
+  S.picks[i] = k; S.shown[i] = pos; S.order.push(i);
   S.dice[i] = { n: n, up: c.up, down: c.down, gain: S.stats[c.up] - before[c.up], loss: before[c.down] - S.stats[c.down] };
   renderStats(true);
   renderRoll(i, before);
@@ -303,7 +308,7 @@ function renderRoll(i, before) { // 이번 선택으로 수치가 어떻게 바�
 function fillFeedback(i) {
   var sc = SCENES[i];
   setPopHead(i, S.phase === 'review' ? '다시 보기' : '그 뒤에 벌어진 일');
-  $('fbLetter').textContent = LETTERS[S.picks[i]];
+  $('fbLetter').textContent = LETTERS[S.shown[i]];
   $('fbPick').textContent = sc.choices[S.picks[i]].t;
   $('fbReal').textContent = sc.history;
   var bk = $('fbBook'); bk.hidden = !sc.book;
@@ -372,7 +377,7 @@ function showEnd() {
   MVEND.resize();
   var st = {}, bd = {};
   Object.keys(NODE_POS).forEach(function (k) { st[k] = 'done'; });
-  SCENES.forEach(function (sc, i) { bd[sc.node] = LETTERS[S.picks[i]]; });
+  SCENES.forEach(function (sc, i) { bd[sc.node] = LETTERS[S.shown[i]]; });
   MVEND.setNodes(st); MVEND.setBadges(bd); MVEND.setRoute(visitedNodes());
 }
 function avatarName() { var av = AVATARS.filter(function (x) { return x.key === S.avatar; })[0]; return av ? av.name : '인물'; }
@@ -445,6 +450,7 @@ function submit() {
   var detail = {
     avatar: S.avatar,
     picks: S.picks.map(function (p) { return LETTERS[p]; }),
+    shown: S.shown.map(function (p) { return LETTERS[p]; }), // 학생 화면에 보인 알파벳(picks는 원래 번호)
     order: S.order.map(function (i) { return i + 1; }),
     dice: S.dice.map(function (d) { return d ? d.n : null; }),
     stats: S.stats,
