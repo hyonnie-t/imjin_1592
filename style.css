@@ -269,3 +269,23 @@ figure{margin:0}
 /* 넓은 화면(태블릿 가로·PC): 도입 화면은 읽기 좋은 폭으로 가운데에 모은다 */
 #vIntro{max-width:860px;margin-left:auto;margin-right:auto}
 @media (min-width:720px){.army-chip img{aspect-ratio:4/3}}
+
+/* ── 137쪽 탐구활동(선택): 카카오톡 느낌의 말풍선 대본 ── */
+.extra137{margin-top:24px;padding-top:8px;border-top:1px dashed var(--line)}
+.extra137 h3{margin:16px 0 4px}
+.kchat{background:#b2c7d9;border-radius:var(--r);padding:14px 12px 10px;margin:8px 0 16px}
+.k-scene{align-self:center;display:table;margin:0 auto 14px;padding:4px 14px;border-radius:999px;background:rgba(0,0,0,.28);color:#fff;font-size:.95rem;line-height:1.5;text-align:center}
+.k-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:12px}
+.k-av{flex:0 0 42px;width:42px;height:42px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.05rem;color:#fff;background:var(--indigo)}
+.k-king .k-av{background:var(--seal)}
+.k-b .k-av{background:var(--jade)}
+.k-col{flex:1;min-width:0}
+.k-name{display:block;font-size:1rem;font-weight:600;color:#2b3a4a;margin:0 0 3px 2px}
+.k-bubble{margin:0;background:#fff;color:var(--ink);padding:10px 13px;border-radius:4px 16px 16px 16px;font-size:1.05rem;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
+.k-src{margin:6px 2px 0;text-align:right;font-size:.9rem;color:#2b3a4a}
+.pickrow{border:0;padding:0;margin:0 0 12px}
+.pickrow legend{font-weight:700;padding:0;margin-bottom:6px}
+.pick{display:flex;align-items:center;gap:10px;min-height:var(--tap);padding:8px 12px;margin:6px 0;background:#fff;border:2px solid var(--line);border-radius:8px;cursor:pointer;font-weight:600}
+.pick input{width:22px;height:22px;accent-color:var(--indigo);flex:0 0 auto}
+.pick:has(input:checked){border-color:var(--indigo);background:var(--indigo-bg)}
+.extra137 .btn-ghost{margin-top:8px}

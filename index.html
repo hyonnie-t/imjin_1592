@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>임진왜란 전개과정</title>
-<link rel="stylesheet" href="style.css?v=20261012a">
+<link rel="stylesheet" href="style.css?v=20261012b">
 </head>
 <body>
 <header class="top">
@@ -113,7 +113,7 @@
       <ol id="dxList" class="dx-list"></ol>
       <details id="dxSample" class="hint"><summary>다 쓴 일기는 이런 모습이야 (예시)</summary><p id="dxSampleHead" class="dx-sample-head"></p><p id="dxSampleText" class="dx-sample"></p></details>
     </div>
-    <label for="txtDiary">일기 (3문장 이상)</label>
+    <label for="txtDiary">일기 (20자 이상)</label>
     <textarea id="txtDiary" rows="8"></textarea>
     <p id="resErr" class="err" role="alert"></p>
     <button id="btnSubmit" class="btn" type="button">제출하기</button>
@@ -130,6 +130,26 @@
       <p id="copyMsg" class="ok" role="status"></p>
     </div>
     <details class="hint" id="copyFallback" hidden><summary>복사가 안 되면 여기서 직접 복사해</summary><textarea id="copyArea" rows="8" readonly></textarea></details>
+
+    <!-- 선택 활동: 교과서 137쪽 탐구활동 (제출 경로 없이 복사만) -->
+    <div id="extraBox" class="extra137">
+      <button id="btnExtraOpen" class="btn-ghost" type="button" aria-expanded="false" aria-controls="extraBody">📖 137쪽 탐구활동도 해 볼래? (선택)</button>
+      <div id="extraBody" hidden>
+        <h3 id="extraTitle"></h3>
+        <p id="extraLead" class="sub"></p>
+        <div id="kchat" class="kchat" role="group" aria-label="137쪽 역할극 대본"></div>
+        <fieldset class="pickrow">
+          <legend>두 신하의 주장 중 타당하다고 생각하는 입장은?</legend>
+          <label class="pick"><input type="radio" name="extraPick" value="신하 1"><span>신하 1의 주장</span></label>
+          <label class="pick"><input type="radio" name="extraPick" value="신하 2"><span>신하 2의 주장</span></label>
+        </fieldset>
+        <label for="txtExtra">그렇게 생각한 이유 (20자 이상)</label>
+        <textarea id="txtExtra" rows="5" data-no-draft></textarea>
+        <p id="extraErr" class="err" role="alert"></p>
+        <button id="btnExtraCopy" class="btn" type="button">내 생각 복사하기</button>
+        <p id="extraMsg" class="ok" role="status"></p>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -165,11 +185,11 @@
   </div>
 </div>
 
-<script src="data.js?v=20261012a"></script>
-<script src="map.js?v=20261012a"></script>
-<script src="focus_guard.js?v=20261012a"></script>
-<script src="draft_guard.js?v=20261012a"></script>
-<script src="glossary.js?v=20261012a"></script>
-<script src="app.js?v=20261012a"></script>
+<script src="data.js?v=20261012b"></script>
+<script src="map.js?v=20261012b"></script>
+<script src="focus_guard.js?v=20261012b"></script>
+<script src="draft_guard.js?v=20261012b"></script>
+<script src="glossary.js?v=20261012b"></script>
+<script src="app.js?v=20261012b"></script>
 </body>
 </html>

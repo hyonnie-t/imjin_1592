@@ -424,9 +424,8 @@ function showDiaryExamples(i) {
   if (has) { $('dxSampleHead').textContent = DIARY_SAMPLE.head; $('dxSampleText').textContent = DIARY_SAMPLE.text; }
   $('diaryEx').hidden = false;
 }
-function sentenceCount(t) {
-  return t.split(/[.!?。\n]+/).filter(function (x) { return x.trim().length >= 4; }).length;
-}
+var MIN_DIARY = 20, MIN_EXTRA = 20; // 글자 수 하한(공백·줄바꿈 제외)
+function charCount(t) { return t.replace(/\s/g, '').length; }
 function buildPlainText() {
   var sc = SCENES[+$('selDiary').value];
   return '[임진왜란 일기]\n' +
@@ -437,7 +436,7 @@ function submit() {
   var err = $('resErr');
   var si = $('selDiary').value, text = $('txtDiary').value.trim();
   if (si === '') { err.textContent = '일기로 남길 장면을 먼저 골라 줘.'; return; }
-  if (sentenceCount(text) < 3) { err.textContent = '일기를 3문장 이상 써 줘.'; return; }
+  if (charCount(text) < MIN_DIARY) { err.textContent = '일기를 ' + MIN_DIARY + '자 이상 써 줘. (지금 ' + charCount(text) + '자)'; return; }
   if (text.indexOf('…') >= 0) { err.textContent = '일기에 …이 남아 있어. 내 말로 바꿔 써 줘.'; return; }
   err.textContent = '';
   if (SHARE) { finishSubmit(); return; } // 공유용: 전송하지 않는다
@@ -477,7 +476,54 @@ function submit() {
     err.textContent = '제출하지 못했어. 인터넷을 확인하고 다시 눌러 줘. ' + (e && e.message ? '(' + e.message + ')' : '');
   });
 }
+/* ── 137쪽 탐구활동(선택): 말풍선으로 대본을 보여 주고, 입장 + 이유만 쓴다. 서버로 보내지 않고 복사만 한다. ── */
+function renderExtra() {
+  $('extraTitle').textContent = EXTRA_137.title;
+  $('extraLead').textContent = '교과서 137쪽의 역할극 대본이야(' + EXTRA_137.lead + '). 카카오톡 대화처럼 말풍선 모양으로만 바꿨고, 대사는 교과서 그대로야.';
+  var box = $('kchat'); box.innerHTML = '';
+  var sc = document.createElement('p'); sc.className = 'k-scene'; sc.textContent = EXTRA_137.scene; box.appendChild(sc);
+  EXTRA_137.lines.forEach(function (ln) {
+    var row = document.createElement('div'); row.className = 'k-row k-' + ln.key;
+    var av = document.createElement('span'); av.className = 'k-av'; av.setAttribute('aria-hidden', 'true'); av.textContent = ln.badge;
+    var col = document.createElement('div'); col.className = 'k-col';
+    var nm = document.createElement('span'); nm.className = 'k-name'; nm.textContent = ln.who;
+    var bb = document.createElement('p'); bb.className = 'k-bubble'; bb.textContent = ln.text;
+    col.appendChild(nm); col.appendChild(bb); row.appendChild(av); row.appendChild(col); box.appendChild(row);
+  });
+  var src = document.createElement('p'); src.className = 'k-src'; src.textContent = '출처: ' + EXTRA_137.page; box.appendChild(src);
+}
+function resetExtra() {
+  $('extraBody').hidden = true; $('btnExtraOpen').setAttribute('aria-expanded', 'false');
+  $('txtExtra').value = ''; $('extraErr').textContent = ''; $('extraMsg').textContent = '';
+  Array.prototype.forEach.call(document.getElementsByName('extraPick'), function (r) { r.checked = false; });
+}
+function openExtra() {
+  var body = $('extraBody'), open = body.hidden;
+  if (open && !$('kchat').firstChild) renderExtra();
+  body.hidden = !open; $('btnExtraOpen').setAttribute('aria-expanded', String(open));
+  if (open) body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function extraPick() {
+  var r = document.querySelector('input[name="extraPick"]:checked'); return r ? r.value : '';
+}
+function copyExtra() {
+  var err = $('extraErr'), msg = $('extraMsg'), pick = extraPick(), why = $('txtExtra').value.trim();
+  msg.textContent = '';
+  if (!pick) { err.textContent = '신하 1과 신하 2 중에 누구의 주장이 타당한지 골라 줘.'; return; }
+  if (charCount(why) < MIN_EXTRA) { err.textContent = '이유를 ' + MIN_EXTRA + '자 이상 써 줘. (지금 ' + charCount(why) + '자)'; return; }
+  err.textContent = '';
+  var text = '[137쪽 탐구활동] ' + EXTRA_137.title + '\n내가 고른 입장: ' + pick + '의 주장\n이유: ' + why;
+  var done = function () { msg.textContent = SHARE ? '복사했어.' : '복사했어. 패들렛에 붙여 넣어 줘.'; };
+  var fallback = function () {
+    $('copyFallback').hidden = false; $('copyFallback').open = true;
+    $('copyArea').value = text; $('copyArea').select();
+    msg.textContent = '위쪽 칸의 글을 직접 복사해 줘.';
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+  else fallback();
+}
 function finishShare() {
+  resetExtra();
   $('doneTitle').textContent = '일기를 완성했어';
   $('doneMsg').textContent = '이 글은 어디에도 저장되거나 전송되지 않았어. 남기고 싶으면 복사해서 가져가 줘.';
   $('padletBox').hidden = false;
@@ -489,6 +535,7 @@ function finishShare() {
 function finishSubmit() {
   S.submitted = true;
   if (SHARE) { finishShare(); return; }
+  resetExtra();
   if (window.DraftGuard) DraftGuard.clear(); // 제출 성공 → 임시저장 삭제
   $('doneMsg').textContent = S.preview ? '미리보기라서 실제로 저장되지는 않았어.' : '내 기록이 저장됐어.';
   var p = parseSid(S.sid);
@@ -534,6 +581,8 @@ function init() {
   $('selDiary').addEventListener('change', showDiaryFact);
   $('btnSubmit').addEventListener('click', submit);
   $('btnCopy').addEventListener('click', function () { copyText(); });
+  $('btnExtraOpen').addEventListener('click', openExtra);
+  $('btnExtraCopy').addEventListener('click', copyExtra);
   if (SHARE) { S.sid = 'guest'; S.name = ''; openAvatar(); }
   else if (parseSid($('inSid').value) && $('inName').value.trim()) {
     S.sid = $('inSid').value.trim(); S.name = $('inName').value.trim();
