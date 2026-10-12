@@ -481,7 +481,7 @@ function finishShare() {
   $('doneTitle').textContent = '일기를 완성했어';
   $('doneMsg').textContent = '이 글은 어디에도 저장되거나 전송되지 않았어. 남기고 싶으면 복사해서 가져가 줘.';
   $('padletBox').hidden = false;
-  $('padletBox').querySelector('p').textContent = '내 일기를 복사해서 메모장이나 블로그 댓글에 남겨 둘 수 있어.';
+  $('padletMsg').textContent = '내 일기를 복사해서 메모장이나 블로그 댓글에 남겨 둘 수 있어.';
   $('padletLink').parentNode.hidden = true;
   $('copyMsg').textContent = '';
   show('vDone');
@@ -493,9 +493,15 @@ function finishSubmit() {
   $('doneMsg').textContent = S.preview ? '미리보기라서 실제로 저장되지는 않았어.' : '내 기록이 저장됐어.';
   var p = parseSid(S.sid);
   var link = p && p.grade === 3 ? CONFIG.PADLET_BY_BAN[p.ban] : '';
-  $('padletBox').hidden = !link;
+  // 복사 버튼은 반과 상관없이 늘 보인다. 패들렛 주소가 있는 반(3학년 5~8반)에만 열기 링크를 더한다.
+  $('padletBox').hidden = false;
+  $('padletMsg').textContent = link
+    ? '내 글을 패들렛에도 올려 보자. 복사한 뒤 우리 반 패들렛에 붙여 넣으면 돼.'
+    : '내 글을 패들렛에도 올려 보자. 복사한 뒤 선생님이 알려 준 우리 반 패들렛에 붙여 넣으면 돼.';
+  $('padletLink').parentNode.hidden = !link;
   if (link) $('padletLink').href = link;
   $('copyMsg').textContent = '';
+  $('copyFallback').hidden = true;
   show('vDone');
 }
 function copyText() {
