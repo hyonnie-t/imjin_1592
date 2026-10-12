@@ -460,6 +460,7 @@ function submit() {
     choicesJson: JSON.stringify(detail)
   };
   Object.assign(body, FocusGuard.payload());
+  S.lastBody = body; S.lastDetail = detail; // 선택 활동(137쪽)을 같은 행에 합쳐 다시 보낼 때 쓴다
 
   var btn = $('btnSubmit');
   btn.disabled = true; btn.textContent = '보내는 중…';
@@ -495,6 +496,7 @@ function renderExtra() {
 function resetExtra() {
   $('extraBody').hidden = true; $('btnExtraOpen').setAttribute('aria-expanded', 'false');
   $('txtExtra').value = ''; $('extraErr').textContent = ''; $('extraMsg').textContent = '';
+  $('btnExtraSave').disabled = false; $('btnExtraSave').textContent = '저장하기';
   Array.prototype.forEach.call(document.getElementsByName('extraPick'), function (r) { r.checked = false; });
 }
 function openExtra() {
@@ -506,13 +508,18 @@ function openExtra() {
 function extraPick() {
   var r = document.querySelector('input[name="extraPick"]:checked'); return r ? r.value : '';
 }
-function copyExtra() {
-  var err = $('extraErr'), msg = $('extraMsg'), pick = extraPick(), why = $('txtExtra').value.trim();
-  msg.textContent = '';
-  if (!pick) { err.textContent = '신하 1과 신하 2 중에 누구의 주장이 타당한지 골라 줘.'; return; }
-  if (charCount(why) < MIN_EXTRA) { err.textContent = '이유를 ' + MIN_EXTRA + '자 이상 써 줘. (지금 ' + charCount(why) + '자)'; return; }
+function readExtra() { // 입장·이유 검사. 통과하면 { pick, why }, 아니면 null
+  var err = $('extraErr'), pick = extraPick(), why = $('txtExtra').value.trim();
+  $('extraMsg').textContent = '';
+  if (!pick) { err.textContent = '신하 1과 신하 2 중에 누구의 주장이 타당한지 골라 줘.'; return null; }
+  if (charCount(why) < MIN_EXTRA) { err.textContent = '이유를 ' + MIN_EXTRA + '자 이상 써 줘. (지금 ' + charCount(why) + '자)'; return null; }
   err.textContent = '';
-  var text = '[137쪽 탐구활동] ' + EXTRA_137.title + '\n내가 고른 입장: ' + pick + '의 주장\n이유: ' + why;
+  return { pick: pick, why: why };
+}
+function extraText(x) { return '[137쪽 탐구활동] ' + EXTRA_137.title + '\n내가 고른 입장: ' + x.pick + '의 주장\n이유: ' + x.why; }
+function copyExtra() {
+  var x = readExtra(); if (!x) return;
+  var msg = $('extraMsg'), text = extraText(x);
   var done = function () { msg.textContent = SHARE ? '복사했어.' : '복사했어. 패들렛에 붙여 넣어 줘.'; };
   var fallback = function () {
     $('copyFallback').hidden = false; $('copyFallback').open = true;
@@ -521,6 +528,36 @@ function copyExtra() {
   };
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
   else fallback();
+}
+/* 137쪽 답 저장: 일기를 낼 때 보낸 내용(S.lastBody)에 137쪽 답을 덧붙여 같은 학생·같은 gameName으로 다시 보낸다. */
+function saveExtra() {
+  var x = readExtra(); if (!x) return;
+  var msg = $('extraMsg'), err = $('extraErr'), btn = $('btnExtraSave');
+  if (SHARE) { copyExtra(); return; } // 공유용은 서버로 보내지 않는다
+  if (!S.lastBody) { err.textContent = '일기를 먼저 제출해 줘.'; return; }
+  var detail = JSON.parse(JSON.stringify(S.lastDetail || {}));
+  detail.extra137 = { pick: x.pick, reason: x.why };
+  var body = Object.assign({}, S.lastBody, {
+    reflection: S.lastBody.reflection + '\n' + extraText(x),
+    choicesJson: JSON.stringify(detail)
+  });
+  btn.disabled = true; btn.textContent = '저장하는 중…';
+  var ok = function () {
+    btn.disabled = false; btn.textContent = '다시 저장하기';
+    msg.textContent = S.preview ? '미리보기라서 실제로 저장되지는 않았어.' : '저장했어. 패들렛에도 올리려면 아래 복사 버튼을 눌러 줘.';
+  };
+  if (S.preview) { ok(); return; }
+  fetch(CONFIG.SHEET_WEBAPP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(body)
+  }).then(function (r) { return r.json(); }).then(function (res) {
+    if (res && res.result === 'success') ok();
+    else throw new Error((res && res.message) || '저장 실패');
+  }).catch(function (e) {
+    btn.disabled = false; btn.textContent = '저장하기';
+    err.textContent = '저장하지 못했어. 인터넷을 확인하고 다시 눌러 줘. ' + (e && e.message ? '(' + e.message + ')' : '');
+  });
 }
 function finishShare() {
   resetExtra();
@@ -568,7 +605,7 @@ function init() {
   var q = new URLSearchParams(location.search);
   S.preview = q.get('preview') === '1';
   $('previewBar').hidden = !S.preview;
-  if (SHARE) { $('introQ').textContent = '아래 「평양성 탈환도」를 보자. 세 나라 군대가 왜 평양성에서 싸웠을까?'; $('chip').textContent = '중학교 한국사 · 임진왜란'; $('btnSubmit').textContent = '일기 완성하기'; }
+  if (SHARE) { $('btnExtraSave').hidden = true; $('introQ').textContent = '아래 「평양성 탈환도」를 보자. 세 나라 군대가 왜 평양성에서 싸웠을까?'; $('chip').textContent = '중학교 한국사 · 임진왜란'; $('btnSubmit').textContent = '일기 완성하기'; }
   $('inSid').value = q.get('sid') || (S.preview ? '30512' : '');
   $('inName').value = q.get('name') || (S.preview ? '미리보기' : '');
   renderBg();
@@ -582,6 +619,7 @@ function init() {
   $('btnSubmit').addEventListener('click', submit);
   $('btnCopy').addEventListener('click', function () { copyText(); });
   $('btnExtraOpen').addEventListener('click', openExtra);
+  $('btnExtraSave').addEventListener('click', saveExtra);
   $('btnExtraCopy').addEventListener('click', copyExtra);
   if (SHARE) { S.sid = 'guest'; S.name = ''; openAvatar(); }
   else if (parseSid($('inSid').value) && $('inName').value.trim()) {
