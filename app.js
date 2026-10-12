@@ -3,6 +3,7 @@
 var CONFIG = {
   SHEET_WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbyXSjCfWY_HiZFqW_OBR-FQDoIfF1z_STqyKWUI31MacHeY3u7hbirFSFDvW-5yuUHaJQ/exec',
   GAME_NAME: 'imjin_1592',
+  GAME_NAME_137: 'imjin_1592_137', // 137쪽 탐구활동(선택) 전용 활동 id — 커리큘럼 관리에 따로 등록해야 한다
   START: 3,
   MAX: 5,
   PADLET_BY_BAN: {
@@ -460,7 +461,6 @@ function submit() {
     choicesJson: JSON.stringify(detail)
   };
   Object.assign(body, FocusGuard.payload());
-  S.lastBody = body; S.lastDetail = detail; // 선택 활동(137쪽)을 같은 행에 합쳐 다시 보낼 때 쓴다
 
   var btn = $('btnSubmit');
   btn.disabled = true; btn.textContent = '보내는 중…';
@@ -529,18 +529,21 @@ function copyExtra() {
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
   else fallback();
 }
-/* 137쪽 답 저장: 일기를 낼 때 보낸 내용(S.lastBody)에 137쪽 답을 덧붙여 같은 학생·같은 gameName으로 다시 보낸다. */
+/* 137쪽 답 저장: 일기와 별개로, 같은 학번에 활동 id만 CONFIG.GAME_NAME_137로 바꿔 한 번 더 보낸다. 일기 행은 건드리지 않는다. */
 function saveExtra() {
   var x = readExtra(); if (!x) return;
   var msg = $('extraMsg'), err = $('extraErr'), btn = $('btnExtraSave');
   if (SHARE) { copyExtra(); return; } // 공유용은 서버로 보내지 않는다
-  if (!S.lastBody) { err.textContent = '일기를 먼저 제출해 줘.'; return; }
-  var detail = JSON.parse(JSON.stringify(S.lastDetail || {}));
-  detail.extra137 = { pick: x.pick, reason: x.why };
-  var body = Object.assign({}, S.lastBody, {
-    reflection: S.lastBody.reflection + '\n' + extraText(x),
-    choicesJson: JSON.stringify(detail)
-  });
+  var body = {
+    studentId: S.sid,
+    studentName: S.name,
+    gameName: CONFIG.GAME_NAME_137,
+    choiceSummary: x.pick,
+    diffSummary: '137쪽 탐구활동',
+    reflection: '[137쪽 탐구활동] ' + EXTRA_137.title + '\n[입장] ' + x.pick + '의 주장\n[이유] ' + x.why,
+    choicesJson: JSON.stringify({ extra137: { pick: x.pick, reason: x.why } })
+  };
+  if (window.FocusGuard) Object.assign(body, FocusGuard.payload());
   btn.disabled = true; btn.textContent = '저장하는 중…';
   var ok = function () {
     btn.disabled = false; btn.textContent = '다시 저장하기';
