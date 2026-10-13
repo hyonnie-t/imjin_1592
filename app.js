@@ -366,7 +366,7 @@ function showEnd() {
   $('endMatch').textContent = '실제 역사와 같은 선택을 한 장면: ' + sameCount() + ' / ' + SCENES.length;
   choiceLines($('endList'));
   fillSceneSelect($('selDiary'), true);
-  $('diaryFact').hidden = true; $('diaryEx').hidden = true; $('resErr').textContent = '';
+  $('diaryFact').hidden = true; $('diaryEx').hidden = true; $('dxHint').hidden = true; $('resErr').textContent = '';
   // 이 페이지에서 처음 들어올 땐 임시저장에서 복원된 일기를 지우지 않는다(새로고침 뒤 다시 도착한 경우). 다시 하기 때만 비운다.
   if (S.endShown) $('txtDiary').value = '';
   S.endShown = true;
@@ -383,7 +383,7 @@ function showEnd() {
 function avatarName() { var av = AVATARS.filter(function (x) { return x.key === S.avatar; })[0]; return av ? av.name : '인물'; }
 function showDiaryFact() {
   var v = $('selDiary').value, box = $('diaryFact');
-  if (v === '') { box.hidden = true; $('diaryEx').hidden = true; return; }
+  if (v === '') { box.hidden = true; $('diaryEx').hidden = true; $('dxHint').hidden = true; return; }
   var i = +v, sc = SCENES[i];
   $('diaryMine').textContent = '내가 고른 선택 — ' + LETTERS[S.picks[i]] + '. ' + sc.choices[S.picks[i]].t;
   $('diaryReal').textContent = sc.date + ' · ' + sc.place + ' — ' + sc.history;
@@ -428,7 +428,7 @@ function showDiaryExamples(i) {
   var smp = $('dxSample'), has = i === DIARY_SAMPLE.scene;
   smp.hidden = !has; smp.open = false;
   if (has) { $('dxSampleHead').textContent = DIARY_SAMPLE.head; $('dxSampleText').textContent = DIARY_SAMPLE.text; }
-  $('diaryEx').hidden = false;
+  $('diaryEx').hidden = false; $('dxHint').hidden = false;
 }
 var MIN_DIARY = 20, MIN_EXTRA = 20; // 글자 수 하한(공백·줄바꿈 제외)
 function charCount(t) { return t.replace(/\s/g, '').length; }
